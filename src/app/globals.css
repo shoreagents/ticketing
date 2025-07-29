@@ -129,3 +129,47 @@
 .cream-50 {
   background-color: #fefcf8;
 }
+
+/* Line clamp utilities for text truncation */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* Toast text rendering fixes */
+[data-sonner-toaster] {
+  writing-mode: horizontal-tb !important;
+  text-orientation: mixed !important;
+}
+
+[data-sonner-toaster] * {
+  writing-mode: horizontal-tb !important;
+  text-orientation: mixed !important;
+}
+
+/* Ensure proper text rendering in toast notifications */
+.sonner-toast {
+  writing-mode: horizontal-tb !important;
+  text-orientation: mixed !important;
+}
+
+.sonner-toast * {
+  writing-mode: horizontal-tb !important;
+  text-orientation: mixed !important;
+}

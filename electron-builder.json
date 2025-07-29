@@ -1,0 +1,21 @@
+{
+  "appId": "com.matcha.trading",
+  "productName": "Matcha Trading",
+  "directories": {
+    "output": "dist"
+  },
+  "files": [
+    "out/**/*",
+    "electron/**/*",
+    "node_modules/**/*"
+  ],
+  "mac": {
+    "category": "public.app-category.finance"
+  },
+  "win": {
+    "target": "nsis"
+  },
+  "linux": {
+    "target": "AppImage"
+  }
+} 

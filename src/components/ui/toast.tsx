@@ -90,35 +90,20 @@ export const showTicketToast = (ticket: TicketDetails) => {
 
   toast.custom(
     (t) => (
-      <div className={`max-w-md w-full ${statusConfig.bgColor} ${statusConfig.borderColor} border rounded-lg shadow-lg pointer-events-auto p-4`}>
-        <div className="flex items-start space-x-3">
-          <div className="flex-shrink-0">
-            <StatusIcon className={`h-5 w-5 ${statusConfig.color}`} />
-          </div>
+      <div className="w-96 bg-white border border-gray-200 rounded-2xl shadow-lg pointer-events-auto p-6">
+        <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-1">
-              <p className="text-sm font-medium text-gray-900">
-                Ticket #{ticket.id}
-              </p>
-              <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusConfig.color} ${statusConfig.bgColor}`}>
-                {ticket.status.replace('-', ' ')}
-              </div>
-            </div>
-            <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+            <p className="text-sm font-medium text-gray-900">
+              Ticket #{ticket.id} - {ticket.status.replace('-', ' ')}
+            </p>
+            <p className="text-sm text-gray-500 mt-1">
               {ticket.concern}
             </p>
-            <div className="flex items-center justify-between text-xs">
-              {ticket.category && (
-                <span className={`font-medium ${categoryColor}`}>
-                  {ticket.category}
-                </span>
-              )}
-              {ticket.priority && (
-                <span className="text-gray-500">
-                  Priority: {ticket.priority}
-                </span>
-              )}
-            </div>
+            {ticket.category && ticket.priority && (
+              <p className="text-xs text-gray-400 mt-1">
+                {ticket.category} • {ticket.priority} Priority
+              </p>
+            )}
             {ticket.createdAt && (
               <p className="text-xs text-gray-400 mt-1">
                 Created: {ticket.createdAt}
@@ -127,7 +112,7 @@ export const showTicketToast = (ticket: TicketDetails) => {
           </div>
           <button
             onClick={() => toast.dismiss(t)}
-            className="flex-shrink-0 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+            className="ml-4 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
           >
             <XCircle className="h-4 w-4" />
           </button>
@@ -135,8 +120,8 @@ export const showTicketToast = (ticket: TicketDetails) => {
       </div>
     ),
     {
-      duration: 5000,
-      position: 'top-right',
+      duration: Infinity,
+      position: 'top-center',
     }
   )
 }

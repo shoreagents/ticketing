@@ -3,11 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { 
-  showTicketToast, 
-  showNewTicketToast, 
-  showInProgressTicketToast, 
-  showResolvedTicketToast, 
-  showUrgentTicketToast,
+  showTicketToast,
   type TicketDetails 
 } from "@/components/ui/toast"
 
@@ -67,46 +63,6 @@ export default function Home() {
     showTicketToast(ticket)
   }
 
-  const handleShowNewTicket = () => {
-    showNewTicketToast({
-      id: "TK-2024-007",
-      concern: "New software installation request",
-      category: "IT",
-      priority: "Medium",
-      createdAt: "Just now"
-    })
-  }
-
-  const handleShowInProgress = () => {
-    showInProgressTicketToast({
-      id: "TK-2024-008",
-      concern: "Database backup verification",
-      category: "IT",
-      priority: "High",
-      createdAt: "4 hours ago"
-    })
-  }
-
-  const handleShowResolved = () => {
-    showResolvedTicketToast({
-      id: "TK-2024-009",
-      concern: "Printer cartridge replacement",
-      category: "Maintenance",
-      priority: "Medium",
-      createdAt: "1 day ago"
-    })
-  }
-
-  const handleShowUrgent = () => {
-    showUrgentTicketToast({
-      id: "TK-2024-010",
-      concern: "Network security breach detected",
-      category: "IT",
-      priority: "Critical",
-      createdAt: "5 minutes ago"
-    })
-  }
-
   return (
     <div className="min-h-screen bg-[#F7F5F3] p-8">
       <div className="max-w-6xl mx-auto">
@@ -119,7 +75,7 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {demoTickets.map((ticket, index) => (
             <Card key={index} className="hover:shadow-lg transition-shadow">
               <CardHeader>
@@ -158,44 +114,6 @@ export default function Home() {
               </CardContent>
             </Card>
           ))}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button 
-                onClick={handleShowNewTicket}
-                className="w-full"
-                variant="outline"
-              >
-                New Ticket
-              </Button>
-              <Button 
-                onClick={handleShowInProgress}
-                className="w-full"
-                variant="outline"
-              >
-                In Progress
-              </Button>
-              <Button 
-                onClick={handleShowResolved}
-                className="w-full"
-                variant="outline"
-              >
-                Resolved
-              </Button>
-              <Button 
-                onClick={handleShowUrgent}
-                className="w-full"
-                variant="outline"
-              >
-                Urgent
-              </Button>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>

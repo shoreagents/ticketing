@@ -30,10 +30,15 @@ export default function RootLayout({
       >
         {children}
         <Toaster 
-          position="top-right"
+          position="top-center"
           richColors
           closeButton
-          duration={5000}
+          duration={Infinity}
+          expand={true}
+          visibleToasts={10}
+          toastOptions={{
+            duration: Infinity,
+          }}
         />
       </body>
     </html>

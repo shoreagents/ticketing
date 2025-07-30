@@ -112,6 +112,13 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* Font smoothing for better quality */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -o-font-smoothing: antialiased;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -121,23 +128,7 @@
   }
 }
 
-/* Custom colors for the design */
-.lavender-50 {
-  background-color: #faf5ff;
-}
-
-.cream-50 {
-  background-color: #fefcf8;
-}
-
 /* Line clamp utilities for text truncation */
-.line-clamp-1 {
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 1;
-}
-
 .line-clamp-2 {
   overflow: hidden;
   display: -webkit-box;
@@ -145,11 +136,78 @@
   -webkit-line-clamp: 2;
 }
 
-.line-clamp-3 {
+/* Remove horizontal scroll */
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+/* Custom button styling */
+.ticket-button {
+  background: transparent !important;
+  border: 2px solid black !important;
+  color: black !important;
+  border-radius: 9999px !important;
+  padding: 12px 24px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+.ticket-button:hover {
+  background: black !important;
+  color: white !important;
+}
+
+/* Cards section styling */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 30px;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 30px;
+}
+
+@media (min-width: 768px) {
+  .cards-grid {
+    max-width: 800px;
+  }
+}
+
+@media (min-width: 1100px) {
+  .cards-grid {
+    max-width: 1400px;
+  }
+}
+
+@media (min-width: 768px) {
+  .cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1100px) {
+  .cards-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.card-item {
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 0;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
   overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+}
+
+.card-content {
+  text-align: center;
+  color: #666;
+  font-size: 16px;
 }
 
 /* Toast text rendering fixes */
@@ -173,3 +231,4 @@
   writing-mode: horizontal-tb !important;
   text-orientation: mixed !important;
 }
+

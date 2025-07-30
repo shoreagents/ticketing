@@ -4,7 +4,7 @@ import { CheckCircle, Clock, AlertCircle, XCircle, Info } from "lucide-react"
 export interface TicketDetails {
   id: string
   concern: string
-  status: 'new' | 'in-progress' | 'pending' | 'urgent' | 'resolved' | 'cancelled'
+  status: 'On Hold' | 'For Approval' | 'Approved' | 'In Progress' | 'Completed'
   category?: 'IT' | 'Admin' | 'Transport' | 'Finance' | 'Maintenance' | 'Others'
   priority?: 'Critical' | 'High' | 'Medium' | 'Low'
   createdAt?: string
@@ -12,47 +12,40 @@ export interface TicketDetails {
 
 const getStatusConfig = (status: TicketDetails['status']) => {
   switch (status) {
-    case 'new':
+    case 'On Hold':
+      return {
+        icon: Clock,
+        color: 'text-blue-600',
+        bgColor: 'bg-blue-50',
+        borderColor: 'border-blue-200'
+      }
+    case 'For Approval':
       return {
         icon: Info,
         color: 'text-blue-600',
         bgColor: 'bg-blue-50',
         borderColor: 'border-blue-200'
       }
-    case 'in-progress':
-      return {
-        icon: Clock,
-        color: 'text-yellow-600',
-        bgColor: 'bg-yellow-50',
-        borderColor: 'border-yellow-200'
-      }
-    case 'pending':
-      return {
-        icon: Clock,
-        color: 'text-orange-600',
-        bgColor: 'bg-orange-50',
-        borderColor: 'border-orange-200'
-      }
-    case 'urgent':
-      return {
-        icon: AlertCircle,
-        color: 'text-red-600',
-        bgColor: 'bg-red-50',
-        borderColor: 'border-red-200'
-      }
-    case 'resolved':
+    case 'Approved':
       return {
         icon: CheckCircle,
-        color: 'text-green-600',
-        bgColor: 'bg-green-50',
-        borderColor: 'border-green-200'
+        color: 'text-blue-600',
+        bgColor: 'bg-blue-50',
+        borderColor: 'border-blue-200'
       }
-    case 'cancelled':
+    case 'In Progress':
       return {
-        icon: XCircle,
-        color: 'text-gray-600',
-        bgColor: 'bg-gray-50',
-        borderColor: 'border-gray-200'
+        icon: Clock,
+        color: 'text-blue-600',
+        bgColor: 'bg-blue-50',
+        borderColor: 'border-blue-200'
+      }
+    case 'Completed':
+      return {
+        icon: CheckCircle,
+        color: 'text-blue-600',
+        bgColor: 'bg-blue-50',
+        borderColor: 'border-blue-200'
       }
     default:
       return {
@@ -90,22 +83,25 @@ export const showTicketToast = (ticket: TicketDetails) => {
 
   toast.custom(
     (t) => (
-      <div className="w-96 bg-white border border-gray-200 rounded-2xl shadow-lg pointer-events-auto p-6">
+      <div className={`w-96 ${statusConfig.bgColor} border ${statusConfig.borderColor} rounded-3xl shadow-lg pointer-events-auto p-6`}>
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900">
-              Ticket #{ticket.id} - {ticket.status.replace('-', ' ')}
-            </p>
-            <p className="text-sm text-gray-500 mt-1">
+            <div className="flex items-center gap-2 mb-2">
+              <StatusIcon className={`h-4 w-4 ${statusConfig.color}`} />
+              <p className={`text-sm font-medium ${statusConfig.color}`}>
+                Ticket #{ticket.id} - {ticket.status.replace('-', ' ')}
+              </p>
+            </div>
+            <p className="text-sm text-gray-700 mt-1">
               {ticket.concern}
             </p>
             {ticket.category && ticket.priority && (
-              <p className="text-xs text-gray-400 mt-1">
+              <p className={`text-xs ${categoryColor} mt-1`}>
                 {ticket.category} • {ticket.priority} Priority
               </p>
             )}
             {ticket.createdAt && (
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-gray-500 mt-1">
                 Created: {ticket.createdAt}
               </p>
             )}
@@ -127,20 +123,24 @@ export const showTicketToast = (ticket: TicketDetails) => {
 }
 
 // Convenience functions for different ticket statuses
-export const showNewTicketToast = (ticket: Omit<TicketDetails, 'status'>) => {
-  showTicketToast({ ...ticket, status: 'new' })
+export const showOnHoldTicketToast = (ticket: Omit<TicketDetails, 'status'>) => {
+  showTicketToast({ ...ticket, status: 'On Hold' })
+}
+
+export const showForApprovalTicketToast = (ticket: Omit<TicketDetails, 'status'>) => {
+  showTicketToast({ ...ticket, status: 'For Approval' })
+}
+
+export const showApprovedTicketToast = (ticket: Omit<TicketDetails, 'status'>) => {
+  showTicketToast({ ...ticket, status: 'Approved' })
 }
 
 export const showInProgressTicketToast = (ticket: Omit<TicketDetails, 'status'>) => {
-  showTicketToast({ ...ticket, status: 'in-progress' })
+  showTicketToast({ ...ticket, status: 'In Progress' })
 }
 
-export const showResolvedTicketToast = (ticket: Omit<TicketDetails, 'status'>) => {
-  showTicketToast({ ...ticket, status: 'resolved' })
-}
-
-export const showUrgentTicketToast = (ticket: Omit<TicketDetails, 'status'>) => {
-  showTicketToast({ ...ticket, status: 'urgent' })
+export const showCompletedTicketToast = (ticket: Omit<TicketDetails, 'status'>) => {
+  showTicketToast({ ...ticket, status: 'Completed' })
 }
 
 export { toast } 

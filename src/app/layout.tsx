@@ -34,11 +34,7 @@ export default function RootLayout({
           richColors
           closeButton
           duration={Infinity}
-          expand={true}
           visibleToasts={10}
-          toastOptions={{
-            duration: Infinity,
-          }}
         />
       </body>
     </html>

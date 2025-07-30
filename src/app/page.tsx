@@ -1,10 +1,12 @@
 "use client"
 
+import React from 'react'
 import { Button } from '@/components/ui/button'
 import { CircleDollarSignIcon } from '@/components/ui/circle-dollar-sign'
 import { useRef, useEffect } from 'react'
 import { toast } from 'sonner'
-import { showTicketToast } from '@/components/ui/toast'
+
+
 
 function TicketButton() {
   const scrollToCards = () => {
@@ -70,89 +72,10 @@ function FinanceCard() {
 
 export default function Home() {
   useEffect(() => {
-    // Show all test toasts immediately without delays
-    showTicketToast({
-      id: 'TEST-001',
-      concern: 'Test Alert 1 - This is a persistent notification for testing',
-      status: 'For Approval',
-      category: 'IT',
-      priority: 'High',
-      createdAt: new Date().toLocaleString()
-    })
-    
-    showTicketToast({
-      id: 'TEST-002',
-      concern: 'Test Alert 2 - Another persistent notification',
-      status: 'In Progress',
-      category: 'Admin',
-      priority: 'Medium',
-      createdAt: new Date().toLocaleString()
-    })
-    
-    showTicketToast({
-      id: 'TEST-003',
-      concern: 'Test Alert 3 - Third persistent notification',
-      status: 'On Hold',
-      category: 'Finance',
-      priority: 'Critical',
-      createdAt: new Date().toLocaleString()
-    })
+    // No auto-load toasts
   }, [])
 
-  const showOnHoldToast = () => {
-    showTicketToast({
-      id: 'HOLD-001',
-      concern: 'Ticket is currently on hold',
-      status: 'On Hold',
-      category: 'IT',
-      priority: 'High',
-      createdAt: new Date().toLocaleString()
-    })
-  }
 
-  const showForApprovalToast = () => {
-    showTicketToast({
-      id: 'APPROVAL-001',
-      concern: 'Ticket is waiting for approval',
-      status: 'For Approval',
-      category: 'Admin',
-      priority: 'Medium',
-      createdAt: new Date().toLocaleString()
-    })
-  }
-
-  const showApprovedToast = () => {
-    showTicketToast({
-      id: 'APPROVED-001',
-      concern: 'Ticket has been approved',
-      status: 'Approved',
-      category: 'Finance',
-      priority: 'Critical',
-      createdAt: new Date().toLocaleString()
-    })
-  }
-
-  const showInProgressToast = () => {
-    showTicketToast({
-      id: 'PROG-001',
-      concern: 'Ticket is currently being worked on',
-      status: 'In Progress',
-      category: 'Maintenance',
-      priority: 'Low',
-      createdAt: new Date().toLocaleString()
-    })
-  }
-
-  const showCompletedToast = () => {
-    showTicketToast({
-      id: 'COMP-001',
-      concern: 'Ticket has been completed successfully',
-      status: 'Completed',
-      category: 'Transport',
-      priority: 'Medium',
-      createdAt: new Date().toLocaleString()
-    })
-  }
 
   return (
     <>
@@ -181,20 +104,243 @@ export default function Home() {
                         </div>
                         <div className="margin-top margin-small">
                           <div className="button-group is-center">
-                            <Button onClick={showOnHoldToast} className="mr-2">
-                              Test On Hold
-                            </Button>
-                            <Button onClick={showForApprovalToast} className="mr-2">
-                              Test For Approval
-                            </Button>
-                            <Button onClick={showApprovedToast} className="mr-2">
-                              Test Approved
-                            </Button>
-                            <Button onClick={showInProgressToast} className="mr-2">
-                              Test In Progress
-                            </Button>
-                            <Button onClick={showCompletedToast}>
-                              Test Completed
+                            <Button onClick={() => {
+                              // Set up overlay functionality once
+                              const setupOverlay = () => {
+                                const sonnerContainer = document.querySelector('[data-sonner-toaster="true"]');
+                                if (sonnerContainer && !sonnerContainer.hasAttribute('data-overlay-setup')) {
+                                  sonnerContainer.setAttribute('data-overlay-setup', 'true');
+                                  
+                                  sonnerContainer.addEventListener('mouseenter', () => {
+                                    // Check if overlay already exists
+                                    const existingOverlay = document.getElementById('toast-overlay');
+                                    if (existingOverlay) {
+                                      return; // Don't create another overlay
+                                    }
+                                    
+                                    const overlay = document.createElement('div');
+                                    overlay.className = 'fixed inset-0 z-40';
+                                    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0)';
+                                    overlay.style.transition = 'background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                                    overlay.id = 'toast-overlay';
+                                    document.body.appendChild(overlay);
+                                    
+                                    // Trigger the transition after a brief delay
+                                    setTimeout(() => {
+                                      overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
+                                    }, 10);
+                                  });
+                                  
+                                  sonnerContainer.addEventListener('mouseleave', () => {
+                                    const overlay = document.getElementById('toast-overlay');
+                                    if (overlay) {
+                                      overlay.style.backgroundColor = 'rgba(0, 0, 0, 0)';
+                                      setTimeout(() => {
+                                        overlay.remove();
+                                      }, 300);
+                                    }
+                                  });
+                                }
+                              };
+                              
+                              // Set up overlay after toasts render
+                              setTimeout(setupOverlay, 100);
+                              
+                              toast.custom((t) => (
+                                <div 
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    toast.custom((expandedToast) => (
+                                      <div 
+                                        className="w-96 bg-white border border-gray-200 rounded-[16px] px-4 py-2"
+                                      >
+                                        <div className="flex items-center justify-between mb-3">
+                                          <span className="text-xs">Ticket #TK-2024-006</span>
+                                          <span className="px-3 py-1 text-[10px] font-medium bg-gray-100 text-gray-800 rounded-[16px]">On Hold</span>
+                                        </div>
+                                        <div className="text-xs text-gray-600 space-y-1 border-t border-gray-200 pt-3">
+                                          <p><strong>Description:</strong> User reported login issues with the new system</p>
+                                          <p><strong>Priority:</strong> Medium</p>
+                                          <p><strong>Assigned to:</strong> John Smith</p>
+                                          <p><strong>Created:</strong> 2 hours ago</p>
+                                        </div>
+                                      </div>
+                                    ));
+                                    toast.dismiss(t);
+                                  }}
+                                  className="w-96 bg-white border border-gray-200 rounded-[16px] px-4 py-2 flex items-center justify-between cursor-pointer transition-all duration-200 hover:bg-gray-50"
+                                >
+                                  <span className="text-xs">Ticket #TK-2024-006</span>
+                                  <span className="px-3 py-1 text-[10px] font-medium bg-gray-100 text-gray-800 rounded-[16px]">On Hold</span>
+                                </div>
+                              ))
+                              toast.custom((t) => (
+                                <div 
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    toast.custom((expandedToast) => (
+                                      <div 
+                                        className="w-96 bg-white border border-gray-200 rounded-[16px] px-4 py-2"
+                                      >
+                                        <div className="flex items-center justify-between mb-3">
+                                          <span className="text-xs">Ticket #TK-2024-007</span>
+                                          <div className="flex items-center gap-2">
+                                            <span 
+                                              onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                toast.dismiss(expandedToast);
+                                              }}
+                                              className="px-3 py-1 text-[10px] font-medium bg-red-100 text-red-800 rounded-[16px] hover:bg-red-200 hover:text-red-900 transition-all duration-200 ease-in-out cursor-pointer"
+                                            >
+                                              Cancel
+                                            </span>
+                                            <span className="px-3 py-1 text-[10px] font-medium bg-blue-100 text-blue-800 rounded-[16px]">For Approval</span>
+                                          </div>
+                                        </div>
+                                        <div className="text-xs text-gray-600 space-y-1 border-t border-gray-200 pt-3">
+                                          <p><strong>Description:</strong> New feature request for mobile app</p>
+                                          <p><strong>Priority:</strong> High</p>
+                                          <p><strong>Assigned to:</strong> Sarah Johnson</p>
+                                          <p><strong>Created:</strong> 1 hour ago</p>
+                                        </div>
+                                      </div>
+                                    ));
+                                    toast.dismiss(t);
+                                  }}
+                                  className="w-96 bg-white border border-gray-200 rounded-[16px] px-4 py-2 flex items-center justify-between cursor-pointer transition-all duration-200 hover:bg-gray-50"
+                                >
+                                  <span className="text-xs">Ticket #TK-2024-007</span>
+                                  <div className="flex items-center gap-2">
+                                    <span 
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        toast.dismiss(t);
+                                      }}
+                                      className="px-3 py-1 text-[10px] font-medium bg-red-100 text-red-800 rounded-[16px] hover:bg-red-200 hover:text-red-900 transition-all duration-200 ease-in-out cursor-pointer"
+                                    >
+                                      Cancel
+                                    </span>
+                                    <span className="px-3 py-1 text-[10px] font-medium bg-blue-100 text-blue-800 rounded-[16px]">For Approval</span>
+                                  </div>
+                                </div>
+                              ))
+                              toast.custom((t) => (
+                                <div 
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    toast.custom((expandedToast) => (
+                                      <div 
+                                        className="w-96 bg-white border border-gray-200 rounded-[16px] px-4 py-2"
+                                      >
+                                        <div className="flex items-center justify-between mb-3">
+                                          <span className="text-xs">Ticket #TK-2024-008</span>
+                                          <span className="px-3 py-1 text-[10px] font-medium bg-yellow-100 text-yellow-800 rounded-[16px]">In Progress</span>
+                                        </div>
+                                        <div className="text-xs text-gray-600 space-y-1 border-t border-gray-200 pt-3">
+                                          <p><strong>Description:</strong> Bug fix for payment processing</p>
+                                          <p><strong>Priority:</strong> Medium</p>
+                                          <p><strong>Assigned to:</strong> Mike Davis</p>
+                                          <p><strong>Created:</strong> 3 hours ago</p>
+                                        </div>
+                                      </div>
+                                    ));
+                                    toast.dismiss(t);
+                                  }}
+                                  className="w-96 bg-white border border-gray-200 rounded-[16px] px-4 py-2 flex items-center justify-between cursor-pointer transition-all duration-200 hover:bg-gray-50"
+                                >
+                                  <span className="text-xs">Ticket #TK-2024-008</span>
+                                  <span className="px-3 py-1 text-[10px] font-medium bg-yellow-100 text-yellow-800 rounded-[16px]">In Progress</span>
+                                </div>
+                              ))
+                              toast.custom((t) => (
+                                <div 
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    toast.custom((expandedToast) => (
+                                      <div 
+                                        className="w-96 bg-white border border-gray-200 rounded-[16px] px-4 py-2"
+                                      >
+                                        <div className="flex items-center justify-between mb-3">
+                                          <span className="text-xs">Ticket #TK-2024-009</span>
+                                          <span className="px-3 py-1 text-[10px] font-medium bg-green-100 text-green-800 rounded-[16px]">Approved</span>
+                                        </div>
+                                        <div className="text-xs text-gray-600 space-y-1 border-t border-gray-200 pt-3">
+                                          <p><strong>Description:</strong> Office equipment replacement request</p>
+                                          <p><strong>Priority:</strong> Low</p>
+                                          <p><strong>Assigned to:</strong> Lisa Chen</p>
+                                          <p><strong>Created:</strong> 5 hours ago</p>
+                                        </div>
+                                      </div>
+                                    ));
+                                    toast.dismiss(t);
+                                  }}
+                                  className="w-96 bg-white border border-gray-200 rounded-[16px] px-4 py-2 flex items-center justify-between cursor-pointer transition-all duration-200 hover:bg-gray-50"
+                                >
+                                  <span className="text-xs">Ticket #TK-2024-009</span>
+                                  <span className="px-3 py-1 text-[10px] font-medium bg-green-100 text-green-800 rounded-[16px]">Approved</span>
+                                </div>
+                              ))
+                              toast.custom((t) => (
+                                <div 
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    toast.custom((expandedToast) => (
+                                      <div 
+                                        className="w-96 bg-white border border-gray-200 rounded-[16px] px-4 py-2"
+                                      >
+                                        <div className="flex items-center justify-between mb-3">
+                                          <span className="text-xs">Ticket #TK-2024-010</span>
+                                          <div className="flex items-center gap-2">
+                                            <span 
+                                              onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                toast.dismiss(expandedToast);
+                                              }}
+                                              className="px-3 py-1 text-[10px] font-medium bg-orange-100 text-orange-800 rounded-[16px] hover:bg-orange-200 hover:text-orange-900 transition-all duration-200 ease-in-out cursor-pointer"
+                                            >
+                                              Thanks
+                                            </span>
+                                            <span className="px-3 py-1 text-[10px] font-medium bg-green-100 text-green-800 rounded-[16px]">Completed</span>
+                                          </div>
+                                        </div>
+                                        <div className="text-xs text-gray-600 space-y-1 border-t border-gray-200 pt-3">
+                                          <p><strong>Description:</strong> Customer satisfaction survey completed</p>
+                                          <p><strong>Priority:</strong> Low</p>
+                                          <p><strong>Assigned to:</strong> Customer Support Team</p>
+                                          <p><strong>Created:</strong> 1 day ago</p>
+                                        </div>
+                                      </div>
+                                    ));
+                                    toast.dismiss(t);
+                                  }}
+                                  className="w-96 bg-white border border-gray-200 rounded-[16px] px-4 py-2 flex items-center justify-between cursor-pointer transition-all duration-200 hover:bg-gray-50"
+                                >
+                                  <span className="text-xs">Ticket #TK-2024-010</span>
+                                  <div className="flex items-center gap-2">
+                                    <span 
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        toast.dismiss(t);
+                                      }}
+                                      className="px-3 py-1 text-[10px] font-medium bg-orange-100 text-orange-800 rounded-[16px] hover:bg-orange-200 hover:text-orange-900 transition-all duration-200 ease-in-out cursor-pointer"
+                                    >
+                                      Thanks
+                                    </span>
+                                    <span className="px-3 py-1 text-[10px] font-medium bg-green-100 text-green-800 rounded-[16px]">Completed</span>
+                                  </div>
+                                </div>
+                              ))
+                            }}>
+                              Stack Test
                             </Button>
                           </div>
                         </div>

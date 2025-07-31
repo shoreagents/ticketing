@@ -1,12 +1,9 @@
 "use client"
 
-import React from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { CircleDollarSignIcon } from '@/components/ui/circle-dollar-sign'
-import { useRef, useEffect } from 'react'
 import { toast } from 'sonner'
-
-
 
 function TicketButton() {
   const scrollToCards = () => {
@@ -24,12 +21,14 @@ function TicketButton() {
 }
 
 function FinanceCard() {
-  const iconRef = useRef<any>(null);
+  const iconRef = useRef(null);
 
   return (
     <div 
       className="card-item bg-gray-200 transition-all duration-500 ease-in-out hover:scale-105 hover:bg-white cursor-pointer" 
-      onClick={() => window.location.href = '/form?category=Finance'}
+      onClick={() => {
+        window.location.href = '/form?category=Finance'
+      }}
       onMouseEnter={() => {
         if (iconRef.current?.startAnimation) {
           iconRef.current.startAnimation();
@@ -71,11 +70,21 @@ function FinanceCard() {
 }
 
 export default function Home() {
+  const [userData, setUserData] = useState<any>(null)
+
   useEffect(() => {
-    // No auto-load toasts
+    // Check if user is authenticated
+    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+    const storedUserData = localStorage.getItem('userData');
+    
+    if (!isAuthenticated || !storedUserData) {
+      // Redirect to login page
+      window.location.href = '/login';
+      return;
+    }
+    
+    setUserData(JSON.parse(storedUserData));
   }, [])
-
-
 
   return (
     <>
@@ -92,6 +101,26 @@ export default function Home() {
                 <div className="padding-section-large is-hero">
                   <div className="text-align-center">
                     <div className="max-width-medium align-center">
+                      {/* User Info in Hero */}
+                      {userData && (
+                        <div className="flex justify-end mb-8">
+                          <div className="flex items-center gap-3 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-sm border border-gray-200">
+                            <div className="text-right">
+                              <div className="text-sm font-medium text-gray-900">
+                                {userData.first_name} {userData.last_name}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                ID: {userData.employee_id}
+                              </div>
+                            </div>
+                            <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                              <span className="text-sm font-medium text-gray-600">
+                                {userData.first_name?.charAt(0)}{userData.last_name?.charAt(0)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                       <div className="margin-top margin-xxlarge">
                         <div className="margin-bottom margin-small">
                           <h1 className="heading-style-h1">Need <span style={{color: 'rgb(48 134 64)'}}>support</span>? We've got <span style={{color: 'rgb(48 134 64)'}}>you</span>.</h1>
@@ -156,10 +185,10 @@ export default function Home() {
                                         className="w-96 bg-white border border-gray-200 rounded-[16px] px-4 py-2"
                                       >
                                         <div className="flex items-center justify-between mb-3">
-                                          <span className="text-xs">Ticket #TK-2024-006</span>
-                                          <span className="px-3 py-1 text-[10px] font-medium bg-gray-100 text-gray-800 rounded-[16px]">On Hold</span>
+                                          <span className="text-sm">Ticket #TK-2024-006</span>
+                                          <span className="px-3 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-[16px]">On Hold</span>
                                         </div>
-                                        <div className="text-xs text-gray-600 space-y-1 border-t border-gray-200 pt-3">
+                                        <div className="text-sm text-gray-600 space-y-1 border-t border-gray-200 pt-3">
                                           <p><strong>Description:</strong> User reported login issues with the new system</p>
                                           <p><strong>Priority:</strong> Medium</p>
                                           <p><strong>Assigned to:</strong> John Smith</p>
@@ -171,8 +200,8 @@ export default function Home() {
                                   }}
                                   className="w-96 bg-white border border-gray-200 rounded-[16px] px-4 py-2 flex items-center justify-between cursor-pointer transition-all duration-200 hover:bg-gray-50"
                                 >
-                                  <span className="text-xs">Ticket #TK-2024-006</span>
-                                  <span className="px-3 py-1 text-[10px] font-medium bg-gray-100 text-gray-800 rounded-[16px]">On Hold</span>
+                                  <span className="text-sm">Ticket #TK-2024-006</span>
+                                  <span className="px-3 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-[16px]">On Hold</span>
                                 </div>
                               ))
                               toast.custom((t) => (
@@ -185,26 +214,14 @@ export default function Home() {
                                         className="w-96 bg-white border border-gray-200 rounded-[16px] px-4 py-2"
                                       >
                                         <div className="flex items-center justify-between mb-3">
-                                          <span className="text-xs">Ticket #TK-2024-007</span>
-                                          <div className="flex items-center gap-2">
-                                            <span 
-                                              onClick={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                                toast.dismiss(expandedToast);
-                                              }}
-                                              className="px-3 py-1 text-[10px] font-medium bg-red-100 text-red-800 rounded-[16px] hover:bg-red-200 hover:text-red-900 transition-all duration-200 ease-in-out cursor-pointer"
-                                            >
-                                              Cancel
-                                            </span>
-                                            <span className="px-3 py-1 text-[10px] font-medium bg-blue-100 text-blue-800 rounded-[16px]">For Approval</span>
-                                          </div>
+                                          <span className="text-sm">Ticket #TK-2024-007</span>
+                                          <span className="px-3 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-[16px]">Urgent</span>
                                         </div>
-                                        <div className="text-xs text-gray-600 space-y-1 border-t border-gray-200 pt-3">
-                                          <p><strong>Description:</strong> New feature request for mobile app</p>
-                                          <p><strong>Priority:</strong> High</p>
-                                          <p><strong>Assigned to:</strong> Sarah Johnson</p>
-                                          <p><strong>Created:</strong> 1 hour ago</p>
+                                        <div className="text-sm text-gray-600 space-y-1 border-t border-gray-200 pt-3">
+                                          <p><strong>Description:</strong> Server down, affecting all users</p>
+                                          <p><strong>Priority:</strong> Critical</p>
+                                          <p><strong>Assigned to:</strong> John Smith</p>
+                                          <p><strong>Created:</strong> 30 minutes ago</p>
                                         </div>
                                       </div>
                                     ));
@@ -212,20 +229,8 @@ export default function Home() {
                                   }}
                                   className="w-96 bg-white border border-gray-200 rounded-[16px] px-4 py-2 flex items-center justify-between cursor-pointer transition-all duration-200 hover:bg-gray-50"
                                 >
-                                  <span className="text-xs">Ticket #TK-2024-007</span>
-                                  <div className="flex items-center gap-2">
-                                    <span 
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        toast.dismiss(t);
-                                      }}
-                                      className="px-3 py-1 text-[10px] font-medium bg-red-100 text-red-800 rounded-[16px] hover:bg-red-200 hover:text-red-900 transition-all duration-200 ease-in-out cursor-pointer"
-                                    >
-                                      Cancel
-                                    </span>
-                                    <span className="px-3 py-1 text-[10px] font-medium bg-blue-100 text-blue-800 rounded-[16px]">For Approval</span>
-                                  </div>
+                                  <span className="text-sm">Ticket #TK-2024-007</span>
+                                  <span className="px-3 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-[16px]">Urgent</span>
                                 </div>
                               ))
                               toast.custom((t) => (
@@ -238,14 +243,14 @@ export default function Home() {
                                         className="w-96 bg-white border border-gray-200 rounded-[16px] px-4 py-2"
                                       >
                                         <div className="flex items-center justify-between mb-3">
-                                          <span className="text-xs">Ticket #TK-2024-008</span>
-                                          <span className="px-3 py-1 text-[10px] font-medium bg-yellow-100 text-yellow-800 rounded-[16px]">In Progress</span>
+                                          <span className="text-sm">Ticket #TK-2024-008</span>
+                                          <span className="px-3 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-[16px]">In Progress</span>
                                         </div>
-                                        <div className="text-xs text-gray-600 space-y-1 border-t border-gray-200 pt-3">
-                                          <p><strong>Description:</strong> Bug fix for payment processing</p>
+                                        <div className="text-sm text-gray-600 space-y-1 border-t border-gray-200 pt-3">
+                                          <p><strong>Description:</strong> Software update in progress</p>
                                           <p><strong>Priority:</strong> Medium</p>
-                                          <p><strong>Assigned to:</strong> Mike Davis</p>
-                                          <p><strong>Created:</strong> 3 hours ago</p>
+                                          <p><strong>Assigned to:</strong> Mike Wilson</p>
+                                          <p><strong>Created:</strong> 2 hours ago</p>
                                         </div>
                                       </div>
                                     ));
@@ -253,8 +258,8 @@ export default function Home() {
                                   }}
                                   className="w-96 bg-white border border-gray-200 rounded-[16px] px-4 py-2 flex items-center justify-between cursor-pointer transition-all duration-200 hover:bg-gray-50"
                                 >
-                                  <span className="text-xs">Ticket #TK-2024-008</span>
-                                  <span className="px-3 py-1 text-[10px] font-medium bg-yellow-100 text-yellow-800 rounded-[16px]">In Progress</span>
+                                  <span className="text-sm">Ticket #TK-2024-008</span>
+                                  <span className="px-3 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-[16px]">In Progress</span>
                                 </div>
                               ))
                               toast.custom((t) => (
@@ -267,10 +272,10 @@ export default function Home() {
                                         className="w-96 bg-white border border-gray-200 rounded-[16px] px-4 py-2"
                                       >
                                         <div className="flex items-center justify-between mb-3">
-                                          <span className="text-xs">Ticket #TK-2024-009</span>
-                                          <span className="px-3 py-1 text-[10px] font-medium bg-green-100 text-green-800 rounded-[16px]">Approved</span>
+                                          <span className="text-sm">Ticket #TK-2024-009</span>
+                                          <span className="px-3 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-[16px]">Approved</span>
                                         </div>
-                                        <div className="text-xs text-gray-600 space-y-1 border-t border-gray-200 pt-3">
+                                        <div className="text-sm text-gray-600 space-y-1 border-t border-gray-200 pt-3">
                                           <p><strong>Description:</strong> Office equipment replacement request</p>
                                           <p><strong>Priority:</strong> Low</p>
                                           <p><strong>Assigned to:</strong> Lisa Chen</p>
@@ -282,8 +287,8 @@ export default function Home() {
                                   }}
                                   className="w-96 bg-white border border-gray-200 rounded-[16px] px-4 py-2 flex items-center justify-between cursor-pointer transition-all duration-200 hover:bg-gray-50"
                                 >
-                                  <span className="text-xs">Ticket #TK-2024-009</span>
-                                  <span className="px-3 py-1 text-[10px] font-medium bg-green-100 text-green-800 rounded-[16px]">Approved</span>
+                                  <span className="text-sm">Ticket #TK-2024-009</span>
+                                  <span className="px-3 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-[16px]">Approved</span>
                                 </div>
                               ))
                               toast.custom((t) => (
@@ -296,7 +301,7 @@ export default function Home() {
                                         className="w-96 bg-white border border-gray-200 rounded-[16px] px-4 py-2"
                                       >
                                         <div className="flex items-center justify-between mb-3">
-                                          <span className="text-xs">Ticket #TK-2024-010</span>
+                                          <span className="text-sm">Ticket #TK-2024-010</span>
                                           <div className="flex items-center gap-2">
                                             <span 
                                               onClick={(e) => {
@@ -304,14 +309,14 @@ export default function Home() {
                                                 e.stopPropagation();
                                                 toast.dismiss(expandedToast);
                                               }}
-                                              className="px-3 py-1 text-[10px] font-medium bg-orange-100 text-orange-800 rounded-[16px] hover:bg-orange-200 hover:text-orange-900 transition-all duration-200 ease-in-out cursor-pointer"
+                                              className="px-3 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-[16px] hover:bg-orange-200 hover:text-orange-900 transition-all duration-200 ease-in-out cursor-pointer"
                                             >
                                               Thanks
                                             </span>
-                                            <span className="px-3 py-1 text-[10px] font-medium bg-green-100 text-green-800 rounded-[16px]">Completed</span>
+                                            <span className="px-3 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-[16px]">Completed</span>
                                           </div>
                                         </div>
-                                        <div className="text-xs text-gray-600 space-y-1 border-t border-gray-200 pt-3">
+                                        <div className="text-sm text-gray-600 space-y-1 border-t border-gray-200 pt-3">
                                           <p><strong>Description:</strong> Customer satisfaction survey completed</p>
                                           <p><strong>Priority:</strong> Low</p>
                                           <p><strong>Assigned to:</strong> Customer Support Team</p>
@@ -323,7 +328,7 @@ export default function Home() {
                                   }}
                                   className="w-96 bg-white border border-gray-200 rounded-[16px] px-4 py-2 flex items-center justify-between cursor-pointer transition-all duration-200 hover:bg-gray-50"
                                 >
-                                  <span className="text-xs">Ticket #TK-2024-010</span>
+                                  <span className="text-sm">Ticket #TK-2024-010</span>
                                   <div className="flex items-center gap-2">
                                     <span 
                                       onClick={(e) => {
@@ -331,48 +336,28 @@ export default function Home() {
                                         e.stopPropagation();
                                         toast.dismiss(t);
                                       }}
-                                      className="px-3 py-1 text-[10px] font-medium bg-orange-100 text-orange-800 rounded-[16px] hover:bg-orange-200 hover:text-orange-900 transition-all duration-200 ease-in-out cursor-pointer"
+                                      className="px-3 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-[16px] hover:bg-orange-200 hover:text-orange-900 transition-all duration-200 ease-in-out cursor-pointer"
                                     >
                                       Thanks
                                     </span>
-                                    <span className="px-3 py-1 text-[10px] font-medium bg-green-100 text-green-800 rounded-[16px]">Completed</span>
+                                    <span className="px-3 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-[16px]">Completed</span>
                                   </div>
-                                </div>
+            </div>
                               ))
                             }}>
                               Stack Test
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              </Button>
               </div>
             </div>
-            <div className="hero-image is-1">
-              <img src="https://cdn.prod.website-files.com/64d635a2ee91b562a69c08b2/6569c0c8628e87658209928f_Group%2039613.svg" loading="lazy" alt="" className="hero-image-inner" />
-            </div>
-            <div className="hero-image is-2">
-              <img src="https://cdn.prod.website-files.com/64d635a2ee91b562a69c08b2/6569c1b515505c2b51722691_Group%2039614.svg" loading="lazy" alt="" className="hero-image-inner" />
-            </div>
-            <div className="hero-image is-3">
-              <img src="https://cdn.prod.website-files.com/64d635a2ee91b562a69c08b2/6569c00c050a0d478f440bf5_Group.svg" loading="lazy" alt="" className="hero-image-inner" />
-            </div>
-            <div className="hero-image is-4">
-              <img src="https://cdn.prod.website-files.com/64d635a2ee91b562a69c08b2/6569c3042c26a007f73066fa_Group%2039587.svg" loading="lazy" alt="" className="hero-image-inner" />
-            </div>
-            <div className="hero-image is-5">
-              <img src="https://cdn.prod.website-files.com/64d635a2ee91b562a69c08b2/6569c3dc5af680820d0f1543_Group%2039616.svg" loading="lazy" alt="" className="hero-image-inner" />
-            </div>
-            <div className="hero-image is-6">
-              <img src="https://cdn.prod.website-files.com/64d635a2ee91b562a69c08b2/6569c4361f6d3278e217a20b_Group.svg" loading="lazy" alt="" className="hero-image-inner" />
-            </div>
-            <div>
-              <img src="https://cdn.prod.website-files.com/64d635a2ee91b562a69c08b2/64f9c9d390c95d7dfcd800a4_portfolio-shape.svg" loading="lazy" alt="" className="portfolio6_animation-image is-line" />
-            </div>
-          </header>
-          
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+      </header>
+
           {/* New Cards Section */}
           <section>
             <div>
@@ -382,7 +367,9 @@ export default function Home() {
                     {/* Row 1 */}
                     <div 
                       className="card-item bg-gray-200 transition-all duration-500 ease-in-out hover:scale-105 hover:bg-white cursor-pointer" 
-                      onClick={() => window.location.href = '/form?category=IT'}
+                      onClick={() => {
+                        window.location.href = '/form?category=IT'
+                      }}
                     >
                       <div className="card-content">
                         <h3>IT</h3>
@@ -390,18 +377,22 @@ export default function Home() {
                     </div>
                     <div 
                       className="card-item bg-gray-200 transition-all duration-500 ease-in-out hover:scale-105 hover:bg-white cursor-pointer" 
-                      onClick={() => window.location.href = '/form?category=Maintenance'}
+                      onClick={() => {
+                        window.location.href = '/form?category=Maintenance'
+                      }}
                     >
                       <div className="card-content">
                         <h3>Maintenance</h3>
-                      </div>
-                    </div>
+                  </div>
+                </div>
                     <FinanceCard />
                     
                     {/* Row 2 */}
                     <div 
                       className="card-item bg-gray-200 transition-all duration-500 ease-in-out hover:scale-105 hover:bg-white cursor-pointer" 
-                      onClick={() => window.location.href = '/form?category=Admin'}
+                      onClick={() => {
+                        window.location.href = '/form?category=Admin'
+                      }}
                     >
                       <div className="card-content">
                         <h3>Admin</h3>
@@ -409,15 +400,19 @@ export default function Home() {
                     </div>
                     <div 
                       className="card-item bg-gray-200 transition-all duration-500 ease-in-out hover:scale-105 hover:bg-white cursor-pointer" 
-                      onClick={() => window.location.href = '/form?category=Transport'}
+                      onClick={() => {
+                        window.location.href = '/form?category=Transport'
+                      }}
                     >
                       <div className="card-content">
                         <h3>Transport</h3>
                       </div>
-                    </div>
+                        </div>
                     <div 
                       className="card-item bg-gray-200 transition-all duration-500 ease-in-out hover:scale-105 hover:bg-white cursor-pointer" 
-                      onClick={() => window.location.href = '/form?category=Others'}
+                      onClick={() => {
+                        window.location.href = '/form?category=Others'
+                      }}
                     >
                       <div className="card-content">
                         <h3>Others</h3>

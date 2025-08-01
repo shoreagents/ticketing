@@ -43,6 +43,8 @@ export default function Home() {
   const [userData, setUserData] = useState<any>(null)
   const [showDropdown, setShowDropdown] = useState(false)
   const [userTickets, setUserTickets] = useState<any[]>([])
+  const [notificationEventSource, setNotificationEventSource] = useState<EventSource | null>(null)
+  const [shownToastIds, setShownToastIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     // Check if user is authenticated
@@ -112,8 +114,10 @@ export default function Home() {
             // Set up overlay after toasts render
             setTimeout(setupOverlay, 100);
             
-            // Show toasts for user tickets with delay
+            // Show toasts for user tickets with delay (only for initial load)
             data.tickets.forEach((ticket: any, index: number) => {
+              // Track shown toasts to prevent duplicates
+              setShownToastIds(prev => new Set([...prev, ticket.ticket_id]))
               setTimeout(() => {
               const getStatusColor = (status: string) => {
                 switch (status) {
@@ -271,7 +275,200 @@ export default function Home() {
     };
 
     fetchUserTickets();
-  }, [])
+    
+    // Set up real-time notifications
+    if (userData?.id) {
+      const eventSource = new EventSource(`/api/notifications?userId=${userData.id}`)
+      
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data)
+          
+          if (data.type === 'ticket_update') {
+            // Update tickets and show new toasts for new tickets only
+            const currentTicketIds = new Set(userTickets.map(t => t.ticket_id))
+            const newTickets = data.tickets.filter((ticket: any) => !currentTicketIds.has(ticket.ticket_id))
+            
+            // Only update state and show toasts if there are new tickets
+            if (newTickets.length > 0) {
+              setUserTickets(data.tickets)
+              
+              // Show toasts for new tickets only
+              newTickets.forEach((ticket: any) => {
+                                 // Check if we've already shown a toast for this ticket
+                 if (!shownToastIds.has(ticket.ticket_id)) {
+                   setShownToastIds(prev => new Set([...prev, ticket.ticket_id]))
+                   
+                   const getStatusColor = (status: string) => {
+                     switch (status) {
+                       case 'For Approval':
+                         return 'bg-orange-100 text-orange-800';
+                       case 'On Hold':
+                         return 'bg-gray-100 text-gray-800';
+                       case 'In Progress':
+                         return 'bg-blue-100 text-blue-800';
+                       case 'Approved':
+                         return 'bg-indigo-100 text-indigo-800';
+                       case 'Stuck':
+                         return 'bg-red-100 text-red-800';
+                       case 'Actioned':
+                         return 'bg-purple-100 text-purple-800';
+                       case 'Closed':
+                         return 'bg-green-100 text-green-800';
+                       default:
+                         return 'bg-gray-100 text-gray-800';
+                     }
+                   };
+
+                   toast.custom((t) => (
+                     <div 
+                       onClick={(e) => {
+                         e.preventDefault();
+                         e.stopPropagation();
+                         toast.custom((expandedToast) => (
+                           <div 
+                             className="w-[28rem] bg-white border border-gray-200 rounded-[16px] px-4 py-2"
+                           >
+                             <div className="flex items-center justify-between mb-3">
+                               <span className="text-base">{ticket.ticket_id}</span>
+                               <div className="flex items-center gap-2 justify-start">
+                                 {ticket.status === 'Closed' && (
+                                   <span 
+                                     onClick={(e) => {
+                                       e.preventDefault();
+                                       e.stopPropagation();
+                                       toast.dismiss(expandedToast);
+                                     }}
+                                     className="px-3 py-1 text-sm font-medium bg-red-100 text-red-800 rounded-[16px] hover:bg-red-200 hover:text-red-900 transition-all duration-200 ease-in-out cursor-pointer"
+                                   >
+                                     Thanks
+                                   </span>
+                                 )}
+                                 {ticket.status === 'For Approval' && (
+                                   <span 
+                                     onClick={async (e) => {
+                                       e.preventDefault();
+                                       e.stopPropagation();
+                                       
+                                       try {
+                                         const response = await fetch('/api/tickets/delete', {
+                                           method: 'DELETE',
+                                           headers: {
+                                             'Content-Type': 'application/json',
+                                           },
+                                           body: JSON.stringify({ ticketId: ticket.ticket_id })
+                                         });
+                                         
+                                         if (response.ok) {
+                                           toast.dismiss(expandedToast);
+                                           // Remove ticket from local state
+                                           setUserTickets(prev => prev.filter(t => t.ticket_id !== ticket.ticket_id));
+                                         } else {
+                                           console.error('Failed to delete ticket');
+                                         }
+                                       } catch (error) {
+                                         console.error('Error deleting ticket:', error);
+                                       }
+                                     }}
+                                     className="px-3 py-1 text-sm font-medium bg-red-100 text-red-800 rounded-[16px] hover:bg-red-200 hover:text-red-900 transition-all duration-200 ease-in-out cursor-pointer"
+                                   >
+                                     Cancel
+                                   </span>
+                                 )}
+                                 <span className={`px-3 py-1 text-sm font-medium rounded-[16px] ${getStatusColor(ticket.status)}`}>
+                                   {ticket.status === 'Closed' ? 'Completed' : ticket.status}
+                                 </span>
+                               </div>
+                             </div>
+                             <div className="text-base text-gray-600 space-y-1 border-t border-gray-200 pt-3">
+                               <p><strong>Concern:</strong> {ticket.concern}</p>
+                               {ticket.details && <p><strong>Details:</strong> {ticket.details}</p>}
+                               <p><strong>Filed:</strong> {new Date(ticket.created_at).toLocaleDateString()}</p>
+                             </div>
+                           </div>
+                         ));
+                         toast.dismiss(t);
+                       }}
+                       className="w-[28rem] bg-white border border-gray-200 rounded-[16px] px-4 py-2 flex items-center justify-between cursor-pointer transition-all duration-200 hover:bg-gray-50"
+                     >
+                       <div className="flex flex-col">
+                         <span className="text-base font-medium">{ticket.ticket_id}</span>
+                         <span className="text-base text-gray-500">{ticket.category_name || ticket.sector}</span>
+                       </div>
+                       <div className="flex items-center gap-2 justify-start">
+                         {ticket.status === 'Closed' && (
+                           <span 
+                             onClick={(e) => {
+                               e.preventDefault();
+                               e.stopPropagation();
+                               toast.dismiss(t);
+                             }}
+                             className="px-3 py-1 text-sm font-medium bg-red-100 text-red-800 rounded-[16px] hover:bg-red-200 hover:text-red-900 transition-all duration-200 ease-in-out cursor-pointer"
+                           >
+                             Thanks
+                           </span>
+                         )}
+                         {ticket.status === 'For Approval' && (
+                           <span 
+                             onClick={async (e) => {
+                               e.preventDefault();
+                               e.stopPropagation();
+                               
+                               try {
+                                 const response = await fetch('/api/tickets/delete', {
+                                   method: 'DELETE',
+                                   headers: {
+                                     'Content-Type': 'application/json',
+                                   },
+                                   body: JSON.stringify({ ticketId: ticket.ticket_id })
+                                 });
+                                 
+                                 if (response.ok) {
+                                   toast.dismiss(t);
+                                   // Remove ticket from local state
+                                   setUserTickets(prev => prev.filter(t => t.ticket_id !== ticket.ticket_id));
+                                 } else {
+                                   console.error('Failed to delete ticket');
+                                 }
+                               } catch (error) {
+                                 console.error('Error deleting ticket:', error);
+                               }
+                             }}
+                             className="px-3 py-1 text-sm font-medium bg-red-100 text-red-800 rounded-[16px] hover:bg-red-200 hover:text-red-900 transition-all duration-200 ease-in-out cursor-pointer"
+                           >
+                             Cancel
+                           </span>
+                         )}
+                         <span className={`px-3 py-1 text-sm font-medium rounded-[16px] ${getStatusColor(ticket.status)}`}>
+                           {ticket.status === 'Closed' ? 'Completed' : ticket.status}
+                         </span>
+                       </div>
+                     </div>
+                   ));
+                 }
+               });
+             }
+           } catch (error) {
+          console.error('Error parsing notification data:', error)
+        }
+      }
+      
+      eventSource.onerror = (error) => {
+        console.error('EventSource error:', error)
+      }
+      
+      setNotificationEventSource(eventSource)
+    }
+    
+    // Cleanup function
+    return () => {
+      if (notificationEventSource) {
+        notificationEventSource.close()
+      }
+      // Reset shown toast IDs when component unmounts or user changes
+      setShownToastIds(new Set())
+    }
+  }, [userData?.id])
 
   // Close dropdown when clicking outside
   useEffect(() => {

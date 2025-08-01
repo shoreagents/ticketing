@@ -2,8 +2,8 @@
 export type GenderEnum = 'Male' | 'Female' | 'Other' | 'Prefer not to say'
 export type ItemTypeMedical = 'Medicine' | 'Supply'
 export type MemberStatusEnum = 'Current Client' | 'Lost Client'
-export type TicketCategoryEnum = 'Computer & Equipment' | 'Station' | 'Surroundings' | 'Schedule' | 'Compensation' | 'Transport' | 'Suggestion' | 'Check-in'
-export type TicketStatusEnum = 'For Approval' | 'On Hold' | 'In Progress' | 'Approved' | 'Completed'
+export type TicketCategoryEnum = 'Computer & Equipment' | 'Network & Internet' | 'Station' | 'Surroundings' | 'Schedule' | 'Compensation' | 'Transport' | 'Suggestion' | 'Check-in'
+export type TicketStatusEnum = 'For Approval' | 'On Hold' | 'In Progress' | 'Approved' | 'Stuck' | 'Actioned' | 'Closed'
 export type UserTypeEnum = 'Agent' | 'Client' | 'Internal'
 
 export interface User {
@@ -86,6 +86,8 @@ export interface Ticket {
   created_at: string
   updated_at: string
   position: number
+  sector: string
+  category_id?: number
 }
 
 export interface Member {

@@ -196,12 +196,22 @@ html, body {
   border: 1px solid #e0e0e0;
   border-radius: 12px;
   padding: 0;
-  min-height: 300px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  min-height: 250px;
   cursor: pointer;
   overflow: hidden;
+  transition: all 0.3s ease;
+  background: #f8f9fa;
+}
+
+.card-item:hover {
+  transform: translateY(-2px);
+  background: white;
+}
+
+@media (max-width: 768px) {
+  .card-item {
+    min-height: 200px;
+  }
 }
 
 .card-content {
@@ -232,3 +242,151 @@ html, body {
   text-orientation: mixed !important;
 }
 
+/* Custom select placeholder color override */
+[data-custom-placeholder="true"] [data-slot="select-value"] {
+  color: rgb(107 114 128) !important;
+}
+
+/* Custom select border override */
+[data-custom-placeholder="true"] {
+  border: 1px solid rgb(209 213 219) !important;
+  border-color: rgb(209 213 219) !important;
+}
+
+/* Form label spacing override */
+form .space-y-3 > [data-slot="label"] {
+  margin-bottom: 8px !important;
+  display: block !important;
+}
+
+/* Custom styles for section header */
+.section_header23 {
+  /* Full height without cropping */
+  min-height: 100vh !important;
+  height: auto !important;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) {
+  .section_header23 {
+    min-height: 100vh !important;
+    height: auto !important;
+    padding-bottom: 2rem;
+  }
+}
+
+/* Ensure the page wrapper takes full height */
+.page-wrapper.navbar-on-page {
+  /* Removed fixed height to allow natural content flow */
+}
+
+/* Make sure the main wrapper takes full height */
+.main-wrapper {
+  /* Removed fixed height to allow natural content flow */
+}
+
+/* Responsive form styles */
+@media (max-width: 640px) {
+  .form-container {
+    padding: 20px !important;
+  }
+  
+  .hero-content {
+    padding: 0 16px;
+  }
+  
+  .hero-content h1 {
+    font-size: 1.75rem !important;
+    line-height: 2rem !important;
+  }
+  
+  .hero-content p {
+    font-size: 1rem !important;
+    line-height: 1.5rem !important;
+  }
+  
+  .ticket-button {
+    padding: 10px 20px !important;
+    font-size: 14px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-container {
+    margin: 0 12px;
+    padding: 16px !important;
+  }
+  
+  .hero-content h1 {
+    font-size: 1.5rem !important;
+    line-height: 1.75rem !important;
+  }
+  
+  .hero-content p {
+    font-size: 0.875rem !important;
+    line-height: 1.25rem !important;
+  }
+  
+  .ticket-button {
+    padding: 8px 16px !important;
+    font-size: 13px !important;
+  }
+  
+  .user-dropdown .flex {
+    gap: 8px !important;
+    padding: 8px 12px !important;
+  }
+  
+  .user-dropdown .text-xs {
+    font-size: 11px !important;
+  }
+}
+
+/* Improve form input responsiveness */
+@media (max-width: 640px) {
+  input[type="text"], 
+  input[type="email"], 
+  input[type="password"],
+  textarea,
+  select {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+  }
+}
+
+/* Better spacing for mobile form elements */
+@media (max-width: 640px) {
+  .space-y-4 > * + * {
+    margin-top: 1rem !important;
+  }
+  
+  .space-y-6 > * + * {
+    margin-top: 1.5rem !important;
+  }
+}
+
+/* Improve file upload area on mobile */
+@media (max-width: 640px) {
+  label[for="supportingInfo"] {
+    min-height: 80px !important;
+  }
+  
+  label[for="supportingInfo"] .text-xs {
+    font-size: 10px !important;
+  }
+  
+  label[for="supportingInfo"] .text-sm {
+    font-size: 12px !important;
+  }
+}
+
+/* Sonner toast shadow customization */
+[data-sonner-toaster] [data-sonner-toast] {
+  box-shadow: none !important;
+  border: none !important;
+}
+
+[data-sonner-toaster] [data-sonner-toast]::before {
+  box-shadow: none !important;
+}

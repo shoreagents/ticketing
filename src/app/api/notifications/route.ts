@@ -18,10 +18,11 @@ export async function GET(request: NextRequest) {
       
       // Set up PostgreSQL notification listener
       try {
-        await notificationListener.listen('ticket_changes', async (notification: any) => {
+        await notificationListener.listen('ticket_changes', async (notification: unknown) => {
+          const typedNotification = notification as { record?: { user_id: number }, action?: string };
           try {
             // Check if the notification is for this user's tickets
-            if (notification.record && notification.record.user_id === parseInt(userId)) {
+            if (typedNotification.record && typedNotification.record.user_id === parseInt(userId)) {
               // Fetch updated tickets for the user
               const tickets = await DatabaseService.getUserTickets(parseInt(userId))
               
@@ -29,8 +30,8 @@ export async function GET(request: NextRequest) {
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
                 type: 'ticket_update', 
                 tickets: tickets,
-                action: notification.action,
-                record: notification.record
+                action: typedNotification.action,
+                record: typedNotification.record
               })}\n\n`))
             }
           } catch (error) {
@@ -58,9 +59,13 @@ export async function GET(request: NextRequest) {
       }
       
       // Clean up on close
+      let isClosed = false
       request.signal.addEventListener('abort', async () => {
-        await notificationListener.unlisten('ticket_changes')
-        controller.close()
+        if (!isClosed) {
+          isClosed = true
+          await notificationListener.unlisten('ticket_changes')
+          controller.close()
+        }
       })
     }
   })

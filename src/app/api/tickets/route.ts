@@ -60,14 +60,15 @@ export async function POST(request: NextRequest) {
       'Compensation': 6,
       'Transport': 7,
       'Suggestion': 8,
-      'Check-in': 9
+      'Check-in': 9,
+      'Others': 10
     }
 
-    const categoryId = categoryMap[category] || null
+    const categoryId = categoryMap[category] || undefined
 
     // Initialize Supabase client for file storage only
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const supabaseKey = process.env.SERVICE_ROLE_KEY
     
     if (!supabaseUrl || !supabaseKey) {
       return NextResponse.json(
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
     const supabase = createClient(supabaseUrl, supabaseKey)
 
     // Upload files to Supabase Storage if any
-    let filePaths: string[] = []
+    const filePaths: string[] = []
     if (files && files.length > 0) {
       for (const file of files) {
         if (file.size > 0) {

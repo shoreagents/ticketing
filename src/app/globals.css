@@ -292,21 +292,21 @@ form .space-y-3 > [data-slot="label"] {
   .form-container {
     padding: 20px !important;
   }
-  
+
   .hero-content {
     padding: 0 16px;
   }
-  
+
   .hero-content h1 {
     font-size: 1.75rem !important;
     line-height: 2rem !important;
   }
-  
+
   .hero-content p {
     font-size: 1rem !important;
     line-height: 1.5rem !important;
   }
-  
+
   .ticket-button {
     padding: 10px 20px !important;
     font-size: 14px !important;
@@ -318,27 +318,27 @@ form .space-y-3 > [data-slot="label"] {
     margin: 0 12px;
     padding: 16px !important;
   }
-  
+
   .hero-content h1 {
     font-size: 1.5rem !important;
     line-height: 1.75rem !important;
   }
-  
+
   .hero-content p {
     font-size: 0.875rem !important;
     line-height: 1.25rem !important;
   }
-  
+
   .ticket-button {
     padding: 8px 16px !important;
     font-size: 13px !important;
   }
-  
+
   .user-dropdown .flex {
     gap: 8px !important;
     padding: 8px 12px !important;
   }
-  
+
   .user-dropdown .text-xs {
     font-size: 11px !important;
   }
@@ -360,7 +360,7 @@ form .space-y-3 > [data-slot="label"] {
   .space-y-4 > * + * {
     margin-top: 1rem !important;
   }
-  
+
   .space-y-6 > * + * {
     margin-top: 1.5rem !important;
   }
@@ -371,11 +371,11 @@ form .space-y-3 > [data-slot="label"] {
   label[for="supportingInfo"] {
     min-height: 80px !important;
   }
-  
+
   label[for="supportingInfo"] .text-xs {
     font-size: 10px !important;
   }
-  
+
   label[for="supportingInfo"] .text-sm {
     font-size: 12px !important;
   }
@@ -389,4 +389,35 @@ form .space-y-3 > [data-slot="label"] {
 
 [data-sonner-toaster] [data-sonner-toast]::before {
   box-shadow: none !important;
+}
+
+/* Ensure toasts are properly centered */
+[data-sonner-toaster] {
+  position: fixed !important;
+  top: 1rem !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 9999 !important;
+}
+
+/* Remove scroll lock padding */
+body[data-scroll-locked] {
+  --removed-body-scroll-bar-size: 0px !important;
+  padding-right: 0 !important;
+}
+
+/* Stronger override for scroll lock */
+html body[data-scroll-locked] {
+  --removed-body-scroll-bar-size: 0px !important;
+  padding-right: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* Even stronger override */
+html body[data-scroll-locked],
+body[data-scroll-locked] {
+  --removed-body-scroll-bar-size: 0px !important;
+  padding-right: 0 !important;
+  margin-right: 0 !important;
+  overflow: auto !important;
 }

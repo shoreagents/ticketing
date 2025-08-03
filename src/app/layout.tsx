@@ -25,6 +25,24 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            body[data-scroll-locked] {
+              --removed-body-scroll-bar-size: 0px !important;
+              padding-right: 0 !important;
+              margin-right: 0 !important;
+              overflow: auto !important;
+            }
+            html body[data-scroll-locked] {
+              --removed-body-scroll-bar-size: 0px !important;
+              padding-right: 0 !important;
+              margin-right: 0 !important;
+              overflow: auto !important;
+            }
+          `
+        }} />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

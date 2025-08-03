@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server'
-import { DatabaseService } from '@/lib/db-service'
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   // This endpoint will be used for WebSocket upgrade
   return new Response('WebSocket endpoint', { status: 200 })
 }

@@ -82,7 +82,7 @@ export default function LoginPage() {
                   <div className="text-align-center">
                     <div className="align-center">
                       <div className="mb-2">
-                        <h1 className="heading-style-h1">Need <span style={{color: 'rgb(48 134 64)'}}>support</span>? We've got <span style={{color: 'rgb(48 134 64)'}}>you</span>.</h1>
+                        <h1 className="heading-style-h1">Need <span style={{color: 'rgb(48 134 64)'}}>support</span>? We&apos;ve got <span style={{color: 'rgb(48 134 64)'}}>you</span>.</h1>
                       </div>
                       <p className="text-size-xlarge margin-bottom margin-medium">Your all-in-one ticketing system for workplace needs.</p>
                       

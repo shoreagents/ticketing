@@ -16,7 +16,7 @@ interface CustomSelectProps {
 export function CustomSelect({
   name,
   required = false,
-  placeholder = "Select an option",
+  placeholder = "Select An Option",
   options,
   className,
   onChange
@@ -29,23 +29,27 @@ export function CustomSelect({
   }
 
     return (
-    <Select onValueChange={handleSelect} value={selectedValue}>
+    <Select onValueChange={handleSelect} value={selectedValue} modal={false}>
              <SelectTrigger 
                  className={cn(
-          "w-full border-2 border-gray-300 bg-gray-50 text-gray-900 focus:border-black focus:ring-1 focus:ring-black rounded-md px-3 py-2 cursor-pointer",
+          "w-full border-2 border-gray-200 bg-white text-gray-900 rounded-md px-3 py-2 cursor-pointer hover:border-gray-300 relative min-w-0",
           className
         )}
-                style={{ 
-          backgroundColor: '#f9fafb',
-          border: '2px solid rgb(209 213 219) !important',
-          borderColor: 'rgb(209 213 219) !important'
-        }}
         data-custom-placeholder="true"
        >
          <SelectValue placeholder={placeholder} />
        </SelectTrigger>
       
-      <SelectContent>
+      <SelectContent 
+        position="popper" 
+        sideOffset={4}
+        align="start"
+        className="z-50 !fixed"
+        side="bottom"
+        avoidCollisions={true}
+        onCloseAutoFocus={(e) => e.preventDefault()}
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         {options.map((option) => (
           <SelectItem key={option.value} value={option.value}>
             {option.label}

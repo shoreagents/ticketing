@@ -1,10 +1,10 @@
-import { Pool } from 'pg'
+import { Pool, PoolClient } from 'pg'
 import pool from './database'
 
 export class PostgresNotificationListener {
   private pool: Pool
-  private client: any = null
-  private listeners: Map<string, Function[]> = new Map()
+  private client: PoolClient | null = null
+  private listeners: Map<string, ((data: unknown) => void)[]> = new Map()
 
   constructor() {
     this.pool = pool
@@ -20,7 +20,7 @@ export class PostgresNotificationListener {
     }
   }
 
-  async listen(channel: string, callback: Function) {
+  async listen(channel: string, callback: (data: unknown) => void) {
     if (!this.client) {
       await this.connect()
     }
@@ -33,11 +33,11 @@ export class PostgresNotificationListener {
       this.listeners.get(channel)!.push(callback)
 
       // Listen to the channel
-      await this.client.query(`LISTEN ${channel}`)
+      await this.client!.query(`LISTEN ${channel}`)
       console.log(`Listening to channel: ${channel}`)
 
       // Set up notification handler
-      this.client.on('notification', (msg: any) => {
+      this.client!.on('notification', (msg: any) => {
         if (msg.channel === channel) {
           try {
             const data = JSON.parse(msg.payload)
@@ -59,7 +59,7 @@ export class PostgresNotificationListener {
     if (!this.client) return
 
     try {
-      await this.client.query(`UNLISTEN ${channel}`)
+      await this.client!.query(`UNLISTEN ${channel}`)
       this.listeners.delete(channel)
       console.log(`Stopped listening to channel: ${channel}`)
     } catch (error) {
@@ -69,7 +69,7 @@ export class PostgresNotificationListener {
 
   async disconnect() {
     if (this.client) {
-      this.client.release()
+      this.client!.release()
       this.client = null
     }
   }

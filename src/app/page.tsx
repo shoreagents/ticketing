@@ -45,80 +45,11 @@ export default function Home() {
   const [userTickets, setUserTickets] = useState<any[]>([])
   const [notificationEventSource, setNotificationEventSource] = useState<EventSource | null>(null)
   const [shownToastIds, setShownToastIds] = useState<Set<string>>(new Set())
+  const initialLoadCompleted = useRef(false)
+  const initialToastsShown = useRef(false)
+  const lastUpdateTime = useRef(0)
 
-  useEffect(() => {
-    // Check if user is authenticated
-    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-    const storedUserData = localStorage.getItem('userData');
-    
-    if (!isAuthenticated || !storedUserData) {
-      // Redirect to login page
-      window.location.href = '/login';
-      return;
-    }
-    
-    setUserData(JSON.parse(storedUserData));
-    
-    // Fetch user tickets for toast notifications
-    const fetchUserTickets = async () => {
-      try {
-        const response = await fetch('/api/tickets/user', {
-          headers: {
-            'user-data': JSON.stringify(JSON.parse(storedUserData))
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.tickets.length > 0) {
-            setUserTickets(data.tickets);
-            
-            // Set up overlay functionality once
-            const setupOverlay = () => {
-              const sonnerContainer = document.querySelector('[data-sonner-toaster="true"]');
-              if (sonnerContainer && !sonnerContainer.hasAttribute('data-overlay-setup')) {
-                sonnerContainer.setAttribute('data-overlay-setup', 'true');
-                
-                sonnerContainer.addEventListener('mouseenter', () => {
-                  // Check if overlay already exists
-                  const existingOverlay = document.getElementById('toast-overlay');
-                  if (existingOverlay) {
-                    return; // Don't create another overlay
-                  }
-                  
-                  const overlay = document.createElement('div');
-                  overlay.className = 'fixed inset-0 z-40';
-                  overlay.style.backgroundColor = 'rgba(0, 0, 0, 0)';
-                  overlay.style.transition = 'background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-                  overlay.id = 'toast-overlay';
-                  document.body.appendChild(overlay);
-                  
-                  // Trigger the transition after a brief delay
-                  setTimeout(() => {
-                    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
-                  }, 10);
-                });
-                
-                sonnerContainer.addEventListener('mouseleave', () => {
-                  const overlay = document.getElementById('toast-overlay');
-                  if (overlay) {
-                    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0)';
-                    setTimeout(() => {
-                      overlay.remove();
-                    }, 300);
-                  }
-                });
-              }
-            };
-            
-            // Set up overlay after toasts render
-            setTimeout(setupOverlay, 100);
-            
-            // Show toasts for user tickets with delay (only for initial load)
-            data.tickets.forEach((ticket: any, index: number) => {
-              // Track shown toasts to prevent duplicates
-              setShownToastIds(prev => new Set([...prev, ticket.ticket_id]))
-              setTimeout(() => {
+  // Utility function for status colors
               const getStatusColor = (status: string) => {
                 switch (status) {
                   case 'For Approval':
@@ -140,87 +71,70 @@ export default function Home() {
                 }
               };
 
-              toast.custom((t) => (
-                <div 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toast.custom((expandedToast) => (
-                      <div 
-                        className="w-[28rem] bg-white border border-gray-200 rounded-[16px] px-4 py-2"
-                      >
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-base">{ticket.ticket_id}</span>
-                          <div className="flex items-center gap-2 justify-start">
-                            {ticket.status === 'Closed' && (
-                              <span 
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  toast.dismiss(expandedToast);
-                                }}
-                                className="px-3 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-[16px] hover:bg-red-200 hover:text-red-900 transition-all duration-200 ease-in-out cursor-pointer"
-                              >
-                                Thanks
-                              </span>
-                            )}
-                            {ticket.status === 'For Approval' && (
-                              <span 
-                                onClick={async (e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  
-                                  try {
-                                    const response = await fetch('/api/tickets/delete', {
-                                      method: 'DELETE',
+  useEffect(() => {
+    // Check if user is authenticated
+    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+    const storedUserData = localStorage.getItem('userData');
+    
+    if (!isAuthenticated || !storedUserData) {
+      window.location.href = '/login';
+      return;
+    }
+    setUserData(JSON.parse(storedUserData));
+
+    // Fetch user tickets for toast notifications
+    const fetchUserTickets = async () => {
+      try {
+        const response = await fetch('/api/tickets/user', {
                                       headers: {
-                                        'Content-Type': 'application/json',
-                                      },
-                                      body: JSON.stringify({ ticketId: ticket.ticket_id })
-                                    });
-                                    
-                                    if (response.ok) {
-                                      toast.dismiss(expandedToast);
-                                      // Remove ticket from local state
-                                      setUserTickets(prev => prev.filter(t => t.ticket_id !== ticket.ticket_id));
-                                    } else {
-                                      console.error('Failed to delete ticket');
-                                    }
-                                  } catch (error) {
-                                    console.error('Error deleting ticket:', error);
-                                  }
-                                }}
-                                className="px-3 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-[16px] hover:bg-red-200 hover:text-red-900 transition-all duration-200 ease-in-out cursor-pointer"
-                              >
-                                Cancel
-                              </span>
-                            )}
-                            <span className={`px-3 py-1 text-sm font-medium rounded-[16px] ${getStatusColor(ticket.status)}`}>
-                              {ticket.status === 'Closed' ? 'Completed' : ticket.status}
-                            </span>
+            'user-data': JSON.stringify(JSON.parse(storedUserData))
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.tickets.length > 0) {
+            setUserTickets(data.tickets);
+
+            // Add existing tickets to shownToastIds to prevent duplicates
+            const existingTicketIds = data.tickets.map((ticket: any) => `${ticket.ticket_id}-${ticket.status}`);
+            setShownToastIds(prev => new Set([...prev, ...existingTicketIds]));
+            
+            // Check localStorage for dismissed toasts
+            const dismissedToasts = JSON.parse(localStorage.getItem('dismissedToasts') || '[]');
+
+                        // Show only one toast for existing tickets (only once)
+            if (!initialToastsShown.current) {
+              initialToastsShown.current = true;
+              // Show only the first non-dismissed ticket toast
+              const nonDismissedTickets = data.tickets.filter((ticket: any) => {
+                const toastKey = `${ticket.ticket_id}-${ticket.status}`;
+                return !dismissedToasts.includes(toastKey);
+              });
+              
+              if (nonDismissedTickets.length > 0) {
+                const ticket = nonDismissedTickets[0];
+                setTimeout(() => {
+                  // Dismiss any existing toasts before showing new one
+                  toast.dismiss();
+                  toast.custom((t) => (
+                    <div className="w-96 bg-white border border-gray-200 rounded-[16px] px-4 py-2">
+                                              <div className="flex items-center justify-between">
+                          <div className="flex flex-col">
+                            <span className="text-base font-medium">{ticket.ticket_id}</span>
                           </div>
-                        </div>
-                        <div className="text-base text-gray-600 space-y-1 border-t border-gray-200 pt-3">
-                          <p><strong>Concern:</strong> {ticket.concern}</p>
-                          {ticket.details && <p><strong>Details:</strong> {ticket.details}</p>}
-                          <p><strong>Filed:</strong> {new Date(ticket.created_at).toLocaleDateString()}</p>
-                        </div>
-                      </div>
-                    ));
-                    toast.dismiss(t);
-                  }}
-                  className="w-[28rem] bg-white border border-gray-200 rounded-[16px] px-4 py-2 flex items-center justify-between cursor-pointer transition-all duration-200 hover:bg-gray-50"
-                >
-                  <div className="flex flex-col">
-                    <span className="text-base font-medium">{ticket.ticket_id}</span>
-                    <span className="text-base text-gray-500">{ticket.category_name || ticket.sector}</span>
-                  </div>
-                  <div className="flex items-center gap-2 justify-start">
+                        <div className="flex items-center gap-2">
                     {ticket.status === 'Closed' && (
                       <span 
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
+                                // Save dismissed toast to localStorage
+                                const toastKey = `${ticket.ticket_id}-${ticket.status}`;
+                                const dismissedToasts = JSON.parse(localStorage.getItem('dismissedToasts') || '[]');
+                                if (!dismissedToasts.includes(toastKey)) {
+                                  dismissedToasts.push(toastKey);
+                                  localStorage.setItem('dismissedToasts', JSON.stringify(dismissedToasts));
+                                }
                           toast.dismiss(t);
                         }}
                         className="px-3 py-1 text-sm font-medium bg-red-100 text-red-800 rounded-[16px] hover:bg-red-200 hover:text-red-900 transition-all duration-200 ease-in-out cursor-pointer"
@@ -233,7 +147,6 @@ export default function Home() {
                         onClick={async (e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          
                           try {
                             const response = await fetch('/api/tickets/delete', {
                               method: 'DELETE',
@@ -242,13 +155,9 @@ export default function Home() {
                               },
                               body: JSON.stringify({ ticketId: ticket.ticket_id })
                             });
-                            
                             if (response.ok) {
                               toast.dismiss(t);
-                              // Remove ticket from local state
                               setUserTickets(prev => prev.filter(t => t.ticket_id !== ticket.ticket_id));
-                            } else {
-                              console.error('Failed to delete ticket');
                             }
                           } catch (error) {
                             console.error('Error deleting ticket:', error);
@@ -262,11 +171,13 @@ export default function Home() {
                     <span className={`px-3 py-1 text-sm font-medium rounded-[16px] ${getStatusColor(ticket.status)}`}>
                       {ticket.status === 'Closed' ? 'Completed' : ticket.status}
                     </span>
+                        </div>
                   </div>
                 </div>
               ));
-            }, index * 1000); // 1 second delay between each toast
-            });
+                }, 1000);
+              }
+            }
           }
         }
       } catch (error) {
@@ -278,197 +189,119 @@ export default function Home() {
     
     // Set up real-time notifications
     if (userData?.id) {
-      const eventSource = new EventSource(`/api/notifications?userId=${userData.id}`)
-      
+      const eventSource = new EventSource(`/api/notifications?userId=${userData.id}`);
       eventSource.onmessage = (event) => {
         try {
-          const data = JSON.parse(event.data)
-          
+          const data = JSON.parse(event.data);
           if (data.type === 'ticket_update') {
-            // Update tickets and show new toasts for new tickets only
-            const currentTicketIds = new Set(userTickets.map(t => t.ticket_id))
-            const newTickets = data.tickets.filter((ticket: any) => !currentTicketIds.has(ticket.ticket_id))
-            
-            // Only update state and show toasts if there are new tickets
-            if (newTickets.length > 0) {
-              setUserTickets(data.tickets)
-              
-              // Show toasts for new tickets only
-              newTickets.forEach((ticket: any) => {
-                                 // Check if we've already shown a toast for this ticket
-                 if (!shownToastIds.has(ticket.ticket_id)) {
-                   setShownToastIds(prev => new Set([...prev, ticket.ticket_id]))
-                   
-                   const getStatusColor = (status: string) => {
-                     switch (status) {
-                       case 'For Approval':
-                         return 'bg-orange-100 text-orange-800';
-                       case 'On Hold':
-                         return 'bg-gray-100 text-gray-800';
-                       case 'In Progress':
-                         return 'bg-blue-100 text-blue-800';
-                       case 'Approved':
-                         return 'bg-indigo-100 text-indigo-800';
-                       case 'Stuck':
-                         return 'bg-red-100 text-red-800';
-                       case 'Actioned':
-                         return 'bg-purple-100 text-purple-800';
-                       case 'Closed':
-                         return 'bg-green-100 text-green-800';
-                       default:
-                         return 'bg-gray-100 text-gray-800';
-                     }
-                   };
+            // Debounce
+            const now = Date.now();
+            if (now - lastUpdateTime.current < 1000) {
+              return;
+            }
+            lastUpdateTime.current = now;
 
-                   toast.custom((t) => (
-                     <div 
-                       onClick={(e) => {
-                         e.preventDefault();
-                         e.stopPropagation();
-                         toast.custom((expandedToast) => (
-                           <div 
-                             className="w-[28rem] bg-white border border-gray-200 rounded-[16px] px-4 py-2"
-                           >
-                             <div className="flex items-center justify-between mb-3">
-                               <span className="text-base">{ticket.ticket_id}</span>
-                               <div className="flex items-center gap-2 justify-start">
-                                 {ticket.status === 'Closed' && (
-                                   <span 
-                                     onClick={(e) => {
-                                       e.preventDefault();
-                                       e.stopPropagation();
-                                       toast.dismiss(expandedToast);
-                                     }}
-                                     className="px-3 py-1 text-sm font-medium bg-red-100 text-red-800 rounded-[16px] hover:bg-red-200 hover:text-red-900 transition-all duration-200 ease-in-out cursor-pointer"
-                                   >
-                                     Thanks
-                                   </span>
-                                 )}
-                                 {ticket.status === 'For Approval' && (
-                                   <span 
-                                     onClick={async (e) => {
-                                       e.preventDefault();
-                                       e.stopPropagation();
-                                       
-                                       try {
-                                         const response = await fetch('/api/tickets/delete', {
-                                           method: 'DELETE',
-                                           headers: {
-                                             'Content-Type': 'application/json',
-                                           },
-                                           body: JSON.stringify({ ticketId: ticket.ticket_id })
-                                         });
-                                         
-                                         if (response.ok) {
-                                           toast.dismiss(expandedToast);
-                                           // Remove ticket from local state
-                                           setUserTickets(prev => prev.filter(t => t.ticket_id !== ticket.ticket_id));
-                                         } else {
-                                           console.error('Failed to delete ticket');
-                                         }
-                                       } catch (error) {
-                                         console.error('Error deleting ticket:', error);
-                                       }
-                                     }}
-                                     className="px-3 py-1 text-sm font-medium bg-red-100 text-red-800 rounded-[16px] hover:bg-red-200 hover:text-red-900 transition-all duration-200 ease-in-out cursor-pointer"
-                                   >
-                                     Cancel
-                                   </span>
-                                 )}
-                                 <span className={`px-3 py-1 text-sm font-medium rounded-[16px] ${getStatusColor(ticket.status)}`}>
-                                   {ticket.status === 'Closed' ? 'Completed' : ticket.status}
-                                 </span>
-                               </div>
-                             </div>
-                             <div className="text-base text-gray-600 space-y-1 border-t border-gray-200 pt-3">
-                               <p><strong>Concern:</strong> {ticket.concern}</p>
-                               {ticket.details && <p><strong>Details:</strong> {ticket.details}</p>}
-                               <p><strong>Filed:</strong> {new Date(ticket.created_at).toLocaleDateString()}</p>
-                             </div>
-                           </div>
-                         ));
-                         toast.dismiss(t);
-                       }}
-                       className="w-[28rem] bg-white border border-gray-200 rounded-[16px] px-4 py-2 flex items-center justify-between cursor-pointer transition-all duration-200 hover:bg-gray-50"
-                     >
-                       <div className="flex flex-col">
-                         <span className="text-base font-medium">{ticket.ticket_id}</span>
-                         <span className="text-base text-gray-500">{ticket.category_name || ticket.sector}</span>
-                       </div>
-                       <div className="flex items-center gap-2 justify-start">
-                         {ticket.status === 'Closed' && (
-                           <span 
-                             onClick={(e) => {
-                               e.preventDefault();
-                               e.stopPropagation();
-                               toast.dismiss(t);
-                             }}
-                             className="px-3 py-1 text-sm font-medium bg-red-100 text-red-800 rounded-[16px] hover:bg-red-200 hover:text-red-900 transition-all duration-200 ease-in-out cursor-pointer"
-                           >
-                             Thanks
-                           </span>
-                         )}
-                         {ticket.status === 'For Approval' && (
-                           <span 
-                             onClick={async (e) => {
-                               e.preventDefault();
-                               e.stopPropagation();
-                               
-                               try {
-                                 const response = await fetch('/api/tickets/delete', {
-                                   method: 'DELETE',
-                                   headers: {
-                                     'Content-Type': 'application/json',
-                                   },
-                                   body: JSON.stringify({ ticketId: ticket.ticket_id })
-                                 });
-                                 
-                                 if (response.ok) {
-                                   toast.dismiss(t);
-                                   // Remove ticket from local state
-                                   setUserTickets(prev => prev.filter(t => t.ticket_id !== ticket.ticket_id));
-                                 } else {
-                                   console.error('Failed to delete ticket');
-                                 }
-                               } catch (error) {
-                                 console.error('Error deleting ticket:', error);
-                               }
-                             }}
-                             className="px-3 py-1 text-sm font-medium bg-red-100 text-red-800 rounded-[16px] hover:bg-red-200 hover:text-red-900 transition-all duration-200 ease-in-out cursor-pointer"
-                           >
-                             Cancel
-                           </span>
-                         )}
-                         <span className={`px-3 py-1 text-sm font-medium rounded-[16px] ${getStatusColor(ticket.status)}`}>
-                           {ticket.status === 'Closed' ? 'Completed' : ticket.status}
-                         </span>
-                       </div>
-                     </div>
-                   ));
-                 }
-               });
-             }
-           } catch (error) {
-          console.error('Error parsing notification data:', error)
+            const currentTicketIds = new Set(userTickets.map((t: any) => t.ticket_id));
+            const newTickets = data.tickets.filter((ticket: any) => !currentTicketIds.has(ticket.ticket_id));
+            const statusUpdates = data.tickets.filter((ticket: any) => {
+              const existingTicket = userTickets.find((t: any) => t.ticket_id === ticket.ticket_id);
+              return existingTicket && existingTicket.status !== ticket.status;
+            });
+
+            if ((newTickets.length > 0 || statusUpdates.length > 0) && data.tickets.length > 0) {
+              setUserTickets(data.tickets);
+
+                            // Show only one toast for new tickets or status updates
+              const ticketsToShow = [...newTickets, ...statusUpdates];
+              if (ticketsToShow.length > 0) {
+                const ticket = ticketsToShow[0]; // Show only the first ticket
+                const toastKey = `${ticket.ticket_id}-${ticket.status}`;
+                if (!shownToastIds.has(toastKey)) {
+                  setShownToastIds(prev => new Set([...prev, toastKey]));
+                  setTimeout(() => {
+                    // Dismiss any existing toasts before showing new one
+                    toast.dismiss();
+                    toast.custom((t) => (
+                      <div className="w-96 bg-white border border-gray-200 rounded-[16px] px-4 py-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex flex-col">
+                            <span className="text-base font-medium">{ticket.ticket_id}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                        {ticket.status === 'Closed' && (
+                          <span 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                                  // Save dismissed toast to localStorage
+                                  const toastKey = `${ticket.ticket_id}-${ticket.status}`;
+                                  const dismissedToasts = JSON.parse(localStorage.getItem('dismissedToasts') || '[]');
+                                  if (!dismissedToasts.includes(toastKey)) {
+                                    dismissedToasts.push(toastKey);
+                                    localStorage.setItem('dismissedToasts', JSON.stringify(dismissedToasts));
+                                  }
+                              toast.dismiss(t);
+                            }}
+                            className="px-3 py-1 text-sm font-medium bg-red-100 text-red-800 rounded-[16px] hover:bg-red-200 hover:text-red-900 transition-all duration-200 ease-in-out cursor-pointer"
+                          >
+                            Thanks
+                          </span>
+                        )}
+                        {ticket.status === 'For Approval' && (
+                          <span 
+                            onClick={async (e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              try {
+                                const response = await fetch('/api/tickets/delete', {
+                                  method: 'DELETE',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                  },
+                                  body: JSON.stringify({ ticketId: ticket.ticket_id })
+                                });
+                                if (response.ok) {
+                                  toast.dismiss(t);
+                                  setUserTickets(prev => prev.filter(t => t.ticket_id !== ticket.ticket_id));
+                                }
+                              } catch (error) {
+                                console.error('Error deleting ticket:', error);
+                              }
+                            }}
+                                className="px-3 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-[16px] hover:bg-red-200 hover:text-red-900 transition-all duration-200 ease-in-out cursor-pointer"
+                          >
+                            Cancel
+                          </span>
+                        )}
+                        <span className={`px-3 py-1 text-sm font-medium rounded-[16px] ${getStatusColor(ticket.status)}`}>
+                          {ticket.status === 'Closed' ? 'Completed' : ticket.status}
+                        </span>
+                          </div>
+                      </div>
+                    </div>
+                  ));
+                  }, 100);
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error parsing notification data:', error);
         }
-      }
-      
+      };
       eventSource.onerror = (error) => {
-        console.error('EventSource error:', error)
-      }
-      
-      setNotificationEventSource(eventSource)
+        console.error('EventSource error:', error);
+      };
+      setNotificationEventSource(eventSource);
     }
-    
-    // Cleanup function
+
+    // Cleanup
     return () => {
       if (notificationEventSource) {
-        notificationEventSource.close()
+        notificationEventSource.close();
       }
-      // Reset shown toast IDs when component unmounts or user changes
-      setShownToastIds(new Set())
-    }
-  }, [userData?.id])
+    };
+  }, [userData?.id]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -560,8 +393,8 @@ export default function Home() {
               <div>
                 <div className="is-hero">
                   <div className="text-align-center">
-                    <div className="align-center m-auto margin-large px-4 sm:px-0">
-                      <div className="margin-top margin-xxlarge">
+                    <div className="align-center m-auto px-4 sm:px-0">
+                      <div className="margin-top margin-medium">
                         <div className="mb-2">
                           <h1 className="heading-style-h1">Welcome, <span style={{color: 'rgb(48 134 64)'}}>{userData?.first_name || 'User'}</span>!</h1>
                         </div>
@@ -584,6 +417,9 @@ export default function Home() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-6xl mx-auto px-12 sm:px-6 md:px-8 mb-10">
                 <div 
                   className="card-item bg-gray-200 transition-all duration-500 ease-in-out hover:scale-105 hover:bg-white cursor-pointer rounded-xl" 
+                  onClick={() => {
+                    window.location.href = '/ticket-history'
+                  }}
                 >
                   <div className="flex flex-col h-full">
                     <div className="pd-right-medium text-left p-6 md:p-6">

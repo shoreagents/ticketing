@@ -1,5 +1,5 @@
 import pool from './database'
-import { User, JobInfo, Agent, Internal, Client, PersonalInfo } from './types'
+import { User, JobInfo, PersonalInfo } from './types'
 
 export class DatabaseService {
   // Authenticate user by employee ID

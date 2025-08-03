@@ -13,13 +13,27 @@ import { toast } from 'sonner'
 
 export default function FormPage() {
   const searchParams = useSearchParams()
-  const category = searchParams.get('category') || 'General'
-  const [userData, setUserData] = useState<any>(null)
+  const [userData, setUserData] = useState<{id: number, first_name: string, last_name: string, employee_id: string} | null>(null)
   const [showDropdown, setShowDropdown] = useState(false)
   const [isDragOver, setIsDragOver] = useState(false)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [categories, setCategories] = useState<Array<{id: number, name: string}>>([])
   const [loading, setLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  
+  // Form validation state
+  const [formData, setFormData] = useState({
+    concern: '',
+    category: '',
+    description: ''
+  })
+  const [isFormValid, setIsFormValid] = useState(false)
+
+  // Check if form is valid whenever formData changes
+  useEffect(() => {
+    const isValid = formData.concern.trim() !== '' && formData.category.trim() !== ''
+    setIsFormValid(isValid)
+  }, [formData])
 
   useEffect(() => {
     // Check if user is authenticated
@@ -85,6 +99,8 @@ export default function FormPage() {
       return
     }
 
+    setIsSubmitting(true)
+
     try {
       // Create FormData for file upload
       const uploadData = new FormData()
@@ -130,6 +146,8 @@ export default function FormPage() {
     } catch (error) {
       console.error('Submit ticket error:', error)
       toast.error('Failed to submit ticket. Please try again.')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -139,6 +157,13 @@ export default function FormPage() {
     setShowDropdown(false);
     window.location.href = '/login';
   };
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -262,69 +287,65 @@ export default function FormPage() {
             )}
 
             {/* Hero Section */}
-            <div className="padding-global mt-16">
+            <div className="padding-global">
               <div className="container-large">
                 <div>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-12">
-                    {/* Text Section - First Column */}
-                    <div className="flex flex-col justify-start">
-                      {/* Back to Home Button */}
-                      <div className="mb-6">
-                        <Button 
-                          onClick={() => window.location.href = '/'}
-                          className="ticket-button !bg-transparent !border-2 !border-black !text-black !rounded-full !px-4 sm:!px-6 !py-2 sm:!py-3 !font-medium hover:!bg-black hover:!text-white font-sans group text-sm sm:text-base"
-                        >
-                          <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-2 transition-transform duration-200 group-hover:-translate-x-1" />
-                          Back to Home
-                        </Button>
-                      </div>
-                      
-                      {/* Title and Description */}
-                      <div className="mb-8">
-                        <div className="mb-2">
-                          <h1 className="heading-style-h1">Submit Your Request</h1>
+                  {/* Title and Description - Same container as home page */}
+                  <div>
+                    <div>
+                      <div className="is-hero">
+                        <div className="text-align-center">
+                          <div className="align-center m-auto px-4 sm:px-0">
+                            <div className="margin-top margin-medium">
+                              <div className="mb-2">
+                                <h1 className="heading-style-h1">Submit Your <span style={{color: 'rgb(48 134 64)'}}>Request</span></h1>
+                              </div>
+                            </div>
+                            <p className="text-size-xlarge">Tell us what you need help with and we'll assist you right away.</p>
+                            <div className="margin-top margin-medium">
+                              <div className="button-group is-center">
+                                {/* You can add buttons here if needed */}
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <p className="text-size-xlarge">Tell us what you need help with and we'll assist you right away.</p>
                       </div>
                     </div>
-                    
-                    {/* Form Section - Second Column */}
-                    <div className="flex justify-center">
-                      <div className="form-container bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200 sm:p-6 lg:p-8 w-full">
+                  </div>
+                  
+                  {/* Form Section - Single Column */}
+                  <div className="flex justify-center mt-8 mb-8">
+                    <div className="form-container bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200 sm:p-6 lg:p-8 w-full max-w-2xl">
                         <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
                           <div className="space-y-2 sm:space-y-3">
-                            <Label htmlFor="concern" className="text-sm sm:text-base">Concern*</Label>
+                            <Label htmlFor="concern" className="text-sm sm:text-base">Concern <span className="text-gray-600">(Required)</span></Label>
                             <Input
                               id="concern"
                               name="concern"
                               placeholder="Briefly describe your issue or request"
                               required
+                              value={formData.concern}
+                              onChange={(e) => handleInputChange('concern', e.target.value)}
                               className="text-sm sm:text-base"
                             />
                           </div>
 
                           <div className="space-y-2 sm:space-y-3">
-                            <Label htmlFor="category" className="text-sm sm:text-base">What is your support ticket related to?*</Label>
+                            <Label htmlFor="category" className="text-sm sm:text-base">What is your support ticket related to? <span className="text-gray-600">(Required)</span></Label>
                             <CustomSelect
                               name="category"
                               required
-                              placeholder="Select an option"
-                              options={[
-                                { value: "Computer & Equipment", label: "Computer & Equipment" },
-                                { value: "Network & Internet", label: "Network & Internet" },
-                                { value: "Station", label: "Station" },
-                                { value: "Surroundings", label: "Surroundings" },
-                                { value: "Schedule", label: "Schedule" },
-                                { value: "Compensation", label: "Compensation" },
-                                { value: "Transport", label: "Transport" },
-                                { value: "Suggestion", label: "Suggestion" },
-                                { value: "Check-in", label: "Check-in" }
-                              ]}
+                              placeholder="Select An Option"
+                              onChange={(value) => handleInputChange('category', value)}
+                              options={categories.map(category => ({
+                                value: category.name,
+                                label: category.name
+                              }))}
                             />
                           </div>
 
                           <div className="space-y-2 sm:space-y-3">
-                            <Label htmlFor="description" className="text-sm sm:text-base">Additional Details (Optional)</Label>
+                            <Label htmlFor="description" className="text-sm sm:text-base">Additional Details <span className="text-gray-600">(Optional)</span></Label>
                             <Textarea
                               id="description"
                               name="description"
@@ -334,7 +355,7 @@ export default function FormPage() {
                           </div>
 
                           <div className="space-y-2 sm:space-y-3">
-                            <Label htmlFor="supportingInfo" className="text-sm sm:text-base">Supporting Information (Optional)</Label>
+                            <Label htmlFor="supportingInfo" className="text-sm sm:text-base">Supporting Information <span className="text-gray-600">(Optional)</span></Label>
                             <label 
                               htmlFor="supportingInfo" 
                               className={`relative flex items-center justify-center w-full h-20 sm:h-24 border-2 border-dashed rounded-md cursor-pointer transition-colors ${
@@ -367,16 +388,16 @@ export default function FormPage() {
                             {selectedFiles.length > 0 && (
                               <div className="space-y-1">
                                 {selectedFiles.map((file, index) => (
-                                  <div key={index} className="flex items-center justify-between bg-gray-50 rounded-md px-3 py-2">
-                                    <div className="flex items-center space-x-2">
-                                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                      <span className="text-xs text-gray-700 truncate">{file.name}</span>
-                                      <span className="text-xs text-gray-500">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                                  <div key={index} className="flex items-center justify-between bg-gray-50 rounded-md px-3 py-2 min-w-0">
+                                    <div className="flex items-center space-x-2 min-w-0 flex-1">
+                                      <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+                                      <span className="text-xs text-gray-700 truncate min-w-0 flex-1">{file.name}</span>
+                                      <span className="text-xs text-gray-500 flex-shrink-0">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
                                     </div>
                                     <button
                                       type="button"
                                       onClick={() => removeFile(index)}
-                                      className="text-red-500 hover:text-red-700 text-xs"
+                                      className="text-red-500 hover:text-red-700 text-xs flex-shrink-0 ml-2"
                                     >
                                       ×
                                     </button>
@@ -386,13 +407,33 @@ export default function FormPage() {
                             )}
                           </div>
 
-                          <div className="flex items-center justify-center pt-2">
+                          {/* Bottom Buttons - Back to Home (left) and Submit (right) */}
+                          <div className="flex items-center justify-between pt-6">
                             <Button 
-                              type="submit"
+                              type="button"
+                              onClick={() => window.location.href = '/'}
                               className="ticket-button !bg-transparent !border-2 !border-black !text-black !rounded-full !px-4 sm:!px-6 !py-2 sm:!py-3 !font-medium hover:!bg-black hover:!text-white font-sans group text-sm sm:text-base"
                             >
-                              Submit Ticket
-                              <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-2 transition-transform duration-200 group-hover:translate-x-1" />
+                              <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-2 transition-transform duration-200 group-hover:-translate-x-1" />
+                              Back to Home
+                            </Button>
+                            
+                            <Button 
+                              type="submit"
+                              disabled={isSubmitting || !isFormValid}
+                              className="ticket-button !bg-transparent !border-2 !border-black !text-black !rounded-full !px-4 sm:!px-6 !py-2 sm:!py-3 !font-medium hover:!bg-black hover:!text-white font-sans group text-sm sm:text-base disabled:!opacity-50 disabled:!cursor-not-allowed"
+                            >
+                              {isSubmitting ? (
+                                <>
+                                  <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2"></div>
+                                  Submitting...
+                                </>
+                              ) : (
+                                <>
+                                  Submit Ticket
+                                  <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-2 transition-transform duration-200 group-hover:translate-x-1" />
+                                </>
+                              )}
                             </Button>
                           </div>
                         </form>
@@ -401,10 +442,9 @@ export default function FormPage() {
                   </div>
                 </div>
               </div>
-            </div>
-          </header>
-        </main>
-      </div>
-    </>
-  )
-} 
+            </header>
+          </main>
+        </div>
+      </>
+    )
+  } 

@@ -90,7 +90,7 @@ export default function FormPage() {
     
     const formData = new FormData(e.target as HTMLFormElement)
     const concern = formData.get('concern') as string
-    const category = formData.get('category') as string
+    const category = formData.category // Use state value instead of form data
     const description = formData.get('description') as string
 
     if (!concern || !category) {

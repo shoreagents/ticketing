@@ -37,6 +37,9 @@ export default function Home() {
   const [shownToastIds, setShownToastIds] = useState<Set<string>>(new Set())
   const initialToastsShown = useRef(false)
   const lastUpdateTime = useRef(0)
+  const userTicketsRef = useRef<Array<{ ticket_id: string; status: string; concern: string; details?: string; created_at: string; category_name?: string; sector?: string }>>([])
+  const notificationEventSourceRef = useRef<EventSource | null>(null)
+  const shownToastIdsRef = useRef<Set<string>>(new Set())
 
   // Utility function for status colors
               const getStatusColor = (status: string) => {
@@ -83,10 +86,12 @@ export default function Home() {
           const data = await response.json();
           if (data.success && data.tickets.length > 0) {
             setUserTickets(data.tickets);
+            userTicketsRef.current = data.tickets;
 
-                         // Add existing tickets to shownToastIds to prevent duplicates
-             const existingTicketIds = data.tickets.map((ticket: { ticket_id: string; status: string }) => `${ticket.ticket_id}-${ticket.status}`);
-            setShownToastIds(prev => new Set([...prev, ...existingTicketIds]));
+                                      // Add existing tickets to shownToastIds to prevent duplicates
+              const existingTicketIds = data.tickets.map((ticket: { ticket_id: string; status: string }) => `${ticket.ticket_id}-${ticket.status}`);
+             setShownToastIds(prev => new Set([...prev, ...existingTicketIds]));
+             shownToastIdsRef.current = new Set([...shownToastIdsRef.current, ...existingTicketIds]);
             
             // Check localStorage for dismissed toasts
             const dismissedToasts = JSON.parse(localStorage.getItem('dismissedToasts') || '[]');
@@ -144,10 +149,12 @@ export default function Home() {
                               },
                               body: JSON.stringify({ ticketId: ticket.ticket_id })
                             });
-                            if (response.ok) {
-                              toast.dismiss(t);
-                              setUserTickets(prev => prev.filter(t => t.ticket_id !== ticket.ticket_id));
-                            }
+                                                            if (response.ok) {
+                                  toast.dismiss(t);
+                                  const updatedTickets = userTicketsRef.current.filter(t => t.ticket_id !== ticket.ticket_id);
+                                  setUserTickets(updatedTickets);
+                                  userTicketsRef.current = updatedTickets;
+                                }
                           } catch (error) {
                             console.error('Error deleting ticket:', error);
                           }
@@ -190,23 +197,25 @@ export default function Home() {
             }
             lastUpdateTime.current = now;
 
-                         const currentTicketIds = new Set(userTickets.map((t: { ticket_id: string }) => t.ticket_id));
+                         const currentTicketIds = new Set(userTicketsRef.current.map((t: { ticket_id: string }) => t.ticket_id));
              const newTickets = data.tickets.filter((ticket: { ticket_id: string; status: string }) => !currentTicketIds.has(ticket.ticket_id));
              const statusUpdates = data.tickets.filter((ticket: { ticket_id: string; status: string }) => {
-               const existingTicket = userTickets.find((t: { ticket_id: string; status: string }) => t.ticket_id === ticket.ticket_id);
+               const existingTicket = userTicketsRef.current.find((t: { ticket_id: string; status: string }) => t.ticket_id === ticket.ticket_id);
                return existingTicket && existingTicket.status !== ticket.status;
              });
 
             if ((newTickets.length > 0 || statusUpdates.length > 0) && data.tickets.length > 0) {
               setUserTickets(data.tickets);
+              userTicketsRef.current = data.tickets;
 
                             // Show only one toast for new tickets or status updates
               const ticketsToShow = [...newTickets, ...statusUpdates];
               if (ticketsToShow.length > 0) {
                 const ticket = ticketsToShow[0]; // Show only the first ticket
-                const toastKey = `${ticket.ticket_id}-${ticket.status}`;
-                if (!shownToastIds.has(toastKey)) {
-                  setShownToastIds(prev => new Set([...prev, toastKey]));
+                                 const toastKey = `${ticket.ticket_id}-${ticket.status}`;
+                 if (!shownToastIdsRef.current.has(toastKey)) {
+                   setShownToastIds(prev => new Set([...prev, toastKey]));
+                   shownToastIdsRef.current.add(toastKey);
                   setTimeout(() => {
                     // Dismiss any existing toasts before showing new one
                     toast.dismiss();
@@ -251,7 +260,9 @@ export default function Home() {
                                 });
                                 if (response.ok) {
                                   toast.dismiss(t);
-                                  setUserTickets(prev => prev.filter(t => t.ticket_id !== ticket.ticket_id));
+                                  const updatedTickets = userTicketsRef.current.filter(t => t.ticket_id !== ticket.ticket_id);
+                                  setUserTickets(updatedTickets);
+                                  userTicketsRef.current = updatedTickets;
                                 }
                               } catch (error) {
                                 console.error('Error deleting ticket:', error);
@@ -282,15 +293,22 @@ export default function Home() {
         console.error('EventSource error:', error);
       };
       setNotificationEventSource(eventSource);
+      notificationEventSourceRef.current = eventSource;
     }
 
     // Cleanup
     return () => {
-      if (notificationEventSource) {
-        notificationEventSource.close();
+      if (notificationEventSourceRef.current) {
+        notificationEventSourceRef.current.close();
       }
+             // Reset refs when component unmounts or user changes
+       initialToastsShown.current = false;
+       lastUpdateTime.current = 0;
+       userTicketsRef.current = [];
+       notificationEventSourceRef.current = null;
+       shownToastIdsRef.current = new Set();
     };
-     }, [userData?.id, notificationEventSource, shownToastIds, userTickets]);
+     }, [userData?.id]);
 
   // Close dropdown when clicking outside
   useEffect(() => {

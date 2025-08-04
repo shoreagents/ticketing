@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { DatabaseService } from '@/lib/db-service'
-import { createClient } from '@supabase/supabase-js'
 
 export async function POST(request: NextRequest) {
   try {
@@ -66,42 +65,12 @@ export async function POST(request: NextRequest) {
 
     const categoryId = categoryMap[category] || undefined
 
-    // Initialize Supabase client for file storage only
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseKey = process.env.SERVICE_ROLE_KEY
-    
-    if (!supabaseUrl || !supabaseKey) {
-      return NextResponse.json(
-        { success: false, error: 'Supabase configuration missing' },
-        { status: 500 }
-      )
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseKey)
-
-    // Upload files to Supabase Storage if any
+    // Handle file uploads (currently disabled - Supabase not configured)
     const filePaths: string[] = []
     if (files && files.length > 0) {
-      for (const file of files) {
-        if (file.size > 0) {
-          const fileName = `${Date.now()}-${file.name}`
-          const { data, error } = await supabase.storage
-            .from('tickets')
-            .upload(`supporting-files/${fileName}`, file)
-
-          if (error) {
-            console.error('File upload error:', error)
-            return NextResponse.json(
-              { success: false, error: 'Failed to upload file' },
-              { status: 500 }
-            )
-          }
-
-          if (data) {
-            filePaths.push(`tickets/supporting-files/${data.path}`)
-          }
-        }
-      }
+      console.log('File uploads are currently disabled - Supabase not configured')
+      // For now, we'll skip file uploads and just create the ticket
+      // TODO: Configure Supabase for file uploads
     }
 
     // Create ticket data

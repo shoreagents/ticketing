@@ -29,7 +29,7 @@ export function CustomSelect({
   }
 
     return (
-    <Select onValueChange={handleSelect} value={selectedValue} modal={false}>
+    <Select onValueChange={handleSelect} value={selectedValue}>
              <SelectTrigger 
                  className={cn(
           "w-full border-2 border-gray-200 bg-white text-gray-900 rounded-md px-3 py-2 cursor-pointer hover:border-gray-300 relative min-w-0",
@@ -48,7 +48,6 @@ export function CustomSelect({
         side="bottom"
         avoidCollisions={true}
         onCloseAutoFocus={(e) => e.preventDefault()}
-        onOpenAutoFocus={(e) => e.preventDefault()}
       >
         {options.map((option) => (
           <SelectItem key={option.value} value={option.value}>

@@ -4,9 +4,10 @@ import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { ArrowLeft, Search, User } from 'lucide-react'
+import { ArrowLeft, Search, User, ArrowUp, ArrowDown } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
+import { CustomSelect } from '@/components/ui/custom-select'
 
 interface Ticket {
   id: number
@@ -66,24 +67,30 @@ export default function TicketHistoryPage() {
   const fetchUserTickets = async (userData: { id: number; first_name: string; last_name: string; employee_id: string }) => {
     try {
       setLoading(true);
+      console.log('Fetching tickets for user:', userData.id);
+      
       const response = await fetch('/api/tickets/user', {
         headers: {
           'user-data': JSON.stringify(userData)
         }
       });
       
+      console.log('Response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('Tickets data:', data);
+        
         if (data.success) {
-          // Filter to only show closed tickets
-          const closedTickets = data.tickets.filter((ticket: Ticket) => ticket.status === 'Closed');
-          setTickets(closedTickets);
+          // Show all tickets for history (not just closed ones)
+          setTickets(data.tickets);
+          console.log('Set tickets:', data.tickets.length);
         } else {
           console.error('Failed to fetch tickets:', data.error);
           toast.error('Failed to fetch tickets');
         }
       } else {
-        console.error('Failed to fetch tickets');
+        console.error('Failed to fetch tickets - status:', response.status);
         toast.error('Failed to fetch tickets');
       }
     } catch (error) {

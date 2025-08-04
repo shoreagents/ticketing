@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 
-export async function GET(_request: NextRequest) {
+export async function GET() {
   // This endpoint will be used for WebSocket upgrade
   return new Response('WebSocket endpoint', { status: 200 })
 }

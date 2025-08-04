@@ -37,7 +37,7 @@ export class PostgresNotificationListener {
       console.log(`Listening to channel: ${channel}`)
 
       // Set up notification handler
-      this.client!.on('notification', (msg: any) => {
+      this.client!.on('notification', (msg: { channel: string; payload: string }) => {
         if (msg.channel === channel) {
           try {
             const data = JSON.parse(msg.payload)

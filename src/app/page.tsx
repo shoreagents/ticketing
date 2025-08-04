@@ -1,8 +1,6 @@
 "use client"
 
 import React, { useState, useRef, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { CircleDollarSignIcon } from '@/components/ui/circle-dollar-sign'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -32,12 +30,11 @@ function FileTicketCard() {
 }
 
 export default function Home() {
-  const [userData, setUserData] = useState<any>(null)
+  const [userData, setUserData] = useState<{ id: number; first_name: string; last_name: string; employee_id: string } | null>(null)
   const [showDropdown, setShowDropdown] = useState(false)
-  const [userTickets, setUserTickets] = useState<any[]>([])
+  const [userTickets, setUserTickets] = useState<Array<{ ticket_id: string; status: string; concern: string; details?: string; created_at: string; category_name?: string; sector?: string }>>([])
   const [notificationEventSource, setNotificationEventSource] = useState<EventSource | null>(null)
   const [shownToastIds, setShownToastIds] = useState<Set<string>>(new Set())
-  const initialLoadCompleted = useRef(false)
   const initialToastsShown = useRef(false)
   const lastUpdateTime = useRef(0)
 
@@ -87,8 +84,8 @@ export default function Home() {
           if (data.success && data.tickets.length > 0) {
             setUserTickets(data.tickets);
 
-            // Add existing tickets to shownToastIds to prevent duplicates
-            const existingTicketIds = data.tickets.map((ticket: any) => `${ticket.ticket_id}-${ticket.status}`);
+                         // Add existing tickets to shownToastIds to prevent duplicates
+             const existingTicketIds = data.tickets.map((ticket: { ticket_id: string; status: string }) => `${ticket.ticket_id}-${ticket.status}`);
             setShownToastIds(prev => new Set([...prev, ...existingTicketIds]));
             
             // Check localStorage for dismissed toasts
@@ -97,11 +94,11 @@ export default function Home() {
                         // Show only one toast for existing tickets (only once)
             if (!initialToastsShown.current) {
               initialToastsShown.current = true;
-              // Show only the first non-dismissed ticket toast
-              const nonDismissedTickets = data.tickets.filter((ticket: any) => {
-                const toastKey = `${ticket.ticket_id}-${ticket.status}`;
-                return !dismissedToasts.includes(toastKey);
-              });
+                             // Show only the first non-dismissed ticket toast
+               const nonDismissedTickets = data.tickets.filter((ticket: { ticket_id: string; status: string }) => {
+                 const toastKey = `${ticket.ticket_id}-${ticket.status}`;
+                 return !dismissedToasts.includes(toastKey);
+               });
               
               if (nonDismissedTickets.length > 0) {
                 const ticket = nonDismissedTickets[0];
@@ -193,12 +190,12 @@ export default function Home() {
             }
             lastUpdateTime.current = now;
 
-            const currentTicketIds = new Set(userTickets.map((t: any) => t.ticket_id));
-            const newTickets = data.tickets.filter((ticket: any) => !currentTicketIds.has(ticket.ticket_id));
-            const statusUpdates = data.tickets.filter((ticket: any) => {
-              const existingTicket = userTickets.find((t: any) => t.ticket_id === ticket.ticket_id);
-              return existingTicket && existingTicket.status !== ticket.status;
-            });
+                         const currentTicketIds = new Set(userTickets.map((t: { ticket_id: string }) => t.ticket_id));
+             const newTickets = data.tickets.filter((ticket: { ticket_id: string; status: string }) => !currentTicketIds.has(ticket.ticket_id));
+             const statusUpdates = data.tickets.filter((ticket: { ticket_id: string; status: string }) => {
+               const existingTicket = userTickets.find((t: { ticket_id: string; status: string }) => t.ticket_id === ticket.ticket_id);
+               return existingTicket && existingTicket.status !== ticket.status;
+             });
 
             if ((newTickets.length > 0 || statusUpdates.length > 0) && data.tickets.length > 0) {
               setUserTickets(data.tickets);
@@ -293,7 +290,7 @@ export default function Home() {
         notificationEventSource.close();
       }
     };
-  }, [userData?.id]);
+     }, [userData?.id, notificationEventSource, shownToastIds, userTickets]);
 
   // Close dropdown when clicking outside
   useEffect(() => {

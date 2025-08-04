@@ -3,12 +3,8 @@
 import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { CustomSelect } from '@/components/ui/custom-select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { ArrowLeft, ArrowRight, Search, Filter, Eye, Calendar, Clock, User, ChevronUp, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
-import { useSearchParams } from 'next/navigation'
+import { ArrowLeft, Search, User } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 
@@ -26,7 +22,6 @@ interface Ticket {
 }
 
 export default function TicketHistoryPage() {
-  const searchParams = useSearchParams()
   const [userData, setUserData] = useState<{id: number, first_name: string, last_name: string, employee_id: string} | null>(null)
   const [showDropdown, setShowDropdown] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -68,7 +63,7 @@ export default function TicketHistoryPage() {
     }
   };
 
-  const fetchUserTickets = async (userData: any) => {
+  const fetchUserTickets = async (userData: { id: number; first_name: string; last_name: string; employee_id: string }) => {
     try {
       setLoading(true);
       const response = await fetch('/api/tickets/user', {

@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       concern = data.concern
       category = data.category
       description = data.description
-      supportingInfo = data.supportingInfo
+
       files = []
     }
 

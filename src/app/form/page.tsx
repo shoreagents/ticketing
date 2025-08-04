@@ -12,7 +12,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 
 export default function FormPage() {
-  const searchParams = useSearchParams()
   const [userData, setUserData] = useState<{id: number, first_name: string, last_name: string, employee_id: string} | null>(null)
   const [showDropdown, setShowDropdown] = useState(false)
   const [isDragOver, setIsDragOver] = useState(false)
@@ -126,7 +125,7 @@ export default function FormPage() {
       const data = await response.json()
 
       if (response.ok && data.success) {
-        toast.custom((t) => (
+        toast.custom(() => (
           <div className="w-96 bg-white border border-gray-200 rounded-[16px] px-4 py-3">
             <div className="flex items-center justify-between">
               <span className="text-base font-medium text-gray-900">Ticket submitted successfully!</span>
@@ -200,24 +199,7 @@ export default function FormPage() {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  const getDescription = (category: string) => {
-    switch (category) {
-      case 'IT':
-        return "Fill out the form below to submit your IT support request."
-      case 'Finance':
-        return "Fill out the form below to submit your finance-related request."
-      case 'Admin':
-        return "Fill out the form below to submit your administrative request."
-      case 'Transport':
-        return "Fill out the form below to submit your transportation request."
-      case 'Maintenance':
-        return "Fill out the form below to submit your maintenance request."
-      case 'Others':
-        return "Fill out the form below to submit your general request."
-      default:
-        return "Fill out the form below to submit your request."
-    }
-  }
+
 
   return (
     <>
@@ -301,7 +283,7 @@ export default function FormPage() {
                                 <h1 className="heading-style-h1">Submit Your <span style={{color: 'rgb(48 134 64)'}}>Request</span></h1>
                               </div>
                             </div>
-                            <p className="text-size-xlarge">Tell us what you need help with and we'll assist you right away.</p>
+                            <p className="text-size-xlarge">Tell us what you need help with and we&apos;ll assist you right away.</p>
                             <div className="margin-top margin-medium">
                               <div className="button-group is-center">
                                 {/* You can add buttons here if needed */}

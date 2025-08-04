@@ -25,15 +25,7 @@ function FileTicketCard() {
             <p className="mg-top-2x-extra-small text-sm md:text-base text-gray-600">Submit a new ticket for any workplace support or assistance.</p>
           </div>
         </div>
-        <div className="inner-container _464px left---100-tablet mt-auto flex items-end justify-end w-full p-6 md:p-6">
-          <div className="features-image-v2">
-            <img 
-              src="https://sanljwkkoawwdpaxrper.supabase.co/storage/v1/object/public/floor-plans/public/ticketing/finance.png"
-              alt="File a Ticket"
-              className="w-auto h-32 md:h-50 object-contain inline"
-            />
-          </div>
-        </div>
+        
       </div>
     </div>
   );
@@ -430,15 +422,7 @@ export default function Home() {
                         <p className="mg-top-2x-extra-small text-sm md:text-base text-gray-600">View and manage your submitted tickets and their status.</p>
                       </div>
                     </div>
-                    <div className="inner-container _464px left---100-tablet mt-auto flex items-end justify-end w-full p-6 md:p-6">
-                      <div className="features-image-v2">
-                        <img 
-                          src="https://sanljwkkoawwdpaxrper.supabase.co/storage/v1/object/public/floor-plans/public/ticketing/finance.png"
-                          alt="IT Support"
-                          className="w-auto h-32 md:h-50 object-contain inline"
-                        />
-                      </div>
-                    </div>
+                    
                   </div>
                 </div>
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { DatabaseService } from '@/lib/db-service'
+import { supabase } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
@@ -64,15 +65,51 @@ export async function POST(request: NextRequest) {
 
     const categoryId = categoryMap[category] || undefined
 
-    // Handle file uploads (currently disabled - Supabase not configured)
+    // Handle file uploads to Supabase Storage
     const filePaths: string[] = []
     if (files && files.length > 0) {
       console.log('Files received:', files.length)
       console.log('File names:', files.map(f => f.name))
       console.log('File sizes:', files.map(f => f.size))
       console.log('File types:', files.map(f => f.type))
-      // For now, we'll skip file uploads and just create the ticket
-      // TODO: Configure Supabase for file uploads
+      
+      try {
+        for (const file of files) {
+          // Generate unique filename
+          const timestamp = Date.now()
+          const fileExtension = file.name.split('.').pop()
+          const uniqueFileName = `${timestamp}_${file.name}`
+          
+          // Upload file to Supabase Storage
+          const { data, error } = await supabase.storage
+            .from('tickets')
+            .upload(`supporting-files/${uniqueFileName}`, file)
+          
+          if (error) {
+            console.error('File upload error:', error)
+            return NextResponse.json(
+              { success: false, error: `Failed to upload file ${file.name}: ${error.message}` },
+              { status: 500 }
+            )
+          }
+          
+          // Get public URL for the uploaded file
+          const { data: urlData } = supabase.storage
+            .from('tickets')
+            .getPublicUrl(`supporting-files/${uniqueFileName}`)
+          
+          if (urlData?.publicUrl) {
+            filePaths.push(urlData.publicUrl)
+            console.log(`File uploaded successfully: ${file.name} -> ${urlData.publicUrl}`)
+          }
+        }
+      } catch (error) {
+        console.error('File upload error:', error)
+        return NextResponse.json(
+          { success: false, error: 'Failed to upload files' },
+          { status: 500 }
+        )
+      }
     } else {
       console.log('No files received')
     }

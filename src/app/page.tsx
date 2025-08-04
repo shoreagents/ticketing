@@ -3,16 +3,16 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
+import TicketFormModal from '@/components/ui/ticket-form-modal'
+import TicketHistoryModal from '@/components/ui/ticket-history-modal'
 
 
 
-function FileTicketCard() {
+function FileTicketCard({ onClick }: { onClick: () => void }) {
   return (
     <div 
       className="card-item bg-gray-200 transition-all duration-500 ease-in-out hover:scale-105 hover:bg-white cursor-pointer rounded-xl" 
-      onClick={() => {
-        window.location.href = '/form'
-      }}
+      onClick={onClick}
     >
       <div className="flex flex-col h-full">
         <div className="pd-right-medium text-left p-6 md:p-6">
@@ -32,6 +32,8 @@ function FileTicketCard() {
 export default function Home() {
   const [userData, setUserData] = useState<{ id: number; first_name: string; last_name: string; employee_id: string } | null>(null)
   const [showDropdown, setShowDropdown] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false)
   const [userTickets, setUserTickets] = useState<Array<{ ticket_id: string; status: string; concern: string; details?: string; created_at: string; category_name?: string; sector?: string }>>([])
   const [notificationEventSource, setNotificationEventSource] = useState<EventSource | null>(null)
   const [shownToastIds, setShownToastIds] = useState<Set<string>>(new Set())
@@ -183,117 +185,131 @@ export default function Home() {
 
     fetchUserTickets();
     
-    // Set up real-time notifications
+    // Set up real-time notifications (optional - only if endpoint exists)
     if (userData?.id) {
-      const eventSource = new EventSource(`/api/notifications?userId=${userData.id}`);
-      eventSource.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (data.type === 'ticket_update') {
-            // Debounce
-            const now = Date.now();
-            if (now - lastUpdateTime.current < 1000) {
-              return;
-            }
-            lastUpdateTime.current = now;
+      try {
+        const eventSource = new EventSource(`/api/notifications?userId=${userData.id}`);
+        
+        eventSource.onopen = () => {
+          console.log('EventSource connected successfully');
+        };
+        
+        eventSource.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'ticket_update') {
+              // Debounce
+              const now = Date.now();
+              if (now - lastUpdateTime.current < 1000) {
+                return;
+              }
+              lastUpdateTime.current = now;
 
-                         const currentTicketIds = new Set(userTicketsRef.current.map((t: { ticket_id: string }) => t.ticket_id));
-             const newTickets = data.tickets.filter((ticket: { ticket_id: string; status: string }) => !currentTicketIds.has(ticket.ticket_id));
-             const statusUpdates = data.tickets.filter((ticket: { ticket_id: string; status: string }) => {
-               const existingTicket = userTicketsRef.current.find((t: { ticket_id: string; status: string }) => t.ticket_id === ticket.ticket_id);
-               return existingTicket && existingTicket.status !== ticket.status;
-             });
+              const currentTicketIds = new Set(userTicketsRef.current.map((t: { ticket_id: string }) => t.ticket_id));
+              const newTickets = data.tickets.filter((ticket: { ticket_id: string; status: string }) => !currentTicketIds.has(ticket.ticket_id));
+              const statusUpdates = data.tickets.filter((ticket: { ticket_id: string; status: string }) => {
+                const existingTicket = userTicketsRef.current.find((t: { ticket_id: string; status: string }) => t.ticket_id === ticket.ticket_id);
+                return existingTicket && existingTicket.status !== ticket.status;
+              });
 
-            if ((newTickets.length > 0 || statusUpdates.length > 0) && data.tickets.length > 0) {
-              setUserTickets(data.tickets);
-              userTicketsRef.current = data.tickets;
+              if ((newTickets.length > 0 || statusUpdates.length > 0) && data.tickets.length > 0) {
+                setUserTickets(data.tickets);
+                userTicketsRef.current = data.tickets;
 
-                            // Show only one toast for new tickets or status updates
-              const ticketsToShow = [...newTickets, ...statusUpdates];
-              if (ticketsToShow.length > 0) {
-                const ticket = ticketsToShow[0]; // Show only the first ticket
-                                 const toastKey = `${ticket.ticket_id}-${ticket.status}`;
-                 if (!shownToastIdsRef.current.has(toastKey)) {
-                   setShownToastIds(prev => new Set([...prev, toastKey]));
-                   shownToastIdsRef.current.add(toastKey);
-                  setTimeout(() => {
-                    // Dismiss any existing toasts before showing new one
-                    toast.dismiss();
-                    toast.custom((t) => (
-                      <div className="w-96 bg-white border border-gray-200 rounded-[16px] px-4 py-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex flex-col">
-                            <span className="text-base font-medium">{ticket.ticket_id}</span>
+                // Show only one toast for new tickets or status updates
+                const ticketsToShow = [...newTickets, ...statusUpdates];
+                if (ticketsToShow.length > 0) {
+                  const ticket = ticketsToShow[0]; // Show only the first ticket
+                  const toastKey = `${ticket.ticket_id}-${ticket.status}`;
+                  if (!shownToastIdsRef.current.has(toastKey)) {
+                    setShownToastIds(prev => new Set([...prev, toastKey]));
+                    shownToastIdsRef.current.add(toastKey);
+                    setTimeout(() => {
+                      // Dismiss any existing toasts before showing new one
+                      toast.dismiss();
+                      toast.custom((t) => (
+                        <div className="w-96 bg-white border border-gray-200 rounded-[16px] px-4 py-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex flex-col">
+                              <span className="text-base font-medium">{ticket.ticket_id}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {ticket.status === 'Closed' && (
+                                <span 
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    // Save dismissed toast to localStorage
+                                    const toastKey = `${ticket.ticket_id}-${ticket.status}`;
+                                    const dismissedToasts = JSON.parse(localStorage.getItem('dismissedToasts') || '[]');
+                                    if (!dismissedToasts.includes(toastKey)) {
+                                      dismissedToasts.push(toastKey);
+                                      localStorage.setItem('dismissedToasts', JSON.stringify(dismissedToasts));
+                                    }
+                                    toast.dismiss(t);
+                                  }}
+                                  className="px-3 py-1 text-sm font-medium bg-red-100 text-red-800 rounded-[16px] hover:bg-red-200 hover:text-red-900 transition-all duration-200 ease-in-out cursor-pointer"
+                                >
+                                  Thanks
+                                </span>
+                              )}
+                              {ticket.status === 'For Approval' && (
+                                <span 
+                                  onClick={async (e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    try {
+                                      const response = await fetch('/api/tickets/delete', {
+                                        method: 'DELETE',
+                                        headers: {
+                                          'Content-Type': 'application/json',
+                                        },
+                                        body: JSON.stringify({ ticketId: ticket.ticket_id })
+                                      });
+                                      if (response.ok) {
+                                        toast.dismiss(t);
+                                        const updatedTickets = userTicketsRef.current.filter(t => t.ticket_id !== ticket.ticket_id);
+                                        setUserTickets(updatedTickets);
+                                        userTicketsRef.current = updatedTickets;
+                                      }
+                                    } catch (error) {
+                                      console.error('Error deleting ticket:', error);
+                                    }
+                                  }}
+                                  className="px-3 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-[16px] hover:bg-red-200 hover:text-red-900 transition-all duration-200 ease-in-out cursor-pointer"
+                                >
+                                  Cancel
+                                </span>
+                              )}
+                              <span className={`px-3 py-1 text-sm font-medium rounded-[16px] ${getStatusColor(ticket.status)}`}>
+                                {ticket.status === 'Closed' ? 'Completed' : ticket.status}
+                              </span>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                        {ticket.status === 'Closed' && (
-                          <span 
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                                  // Save dismissed toast to localStorage
-                                  const toastKey = `${ticket.ticket_id}-${ticket.status}`;
-                                  const dismissedToasts = JSON.parse(localStorage.getItem('dismissedToasts') || '[]');
-                                  if (!dismissedToasts.includes(toastKey)) {
-                                    dismissedToasts.push(toastKey);
-                                    localStorage.setItem('dismissedToasts', JSON.stringify(dismissedToasts));
-                                  }
-                              toast.dismiss(t);
-                            }}
-                            className="px-3 py-1 text-sm font-medium bg-red-100 text-red-800 rounded-[16px] hover:bg-red-200 hover:text-red-900 transition-all duration-200 ease-in-out cursor-pointer"
-                          >
-                            Thanks
-                          </span>
-                        )}
-                        {ticket.status === 'For Approval' && (
-                          <span 
-                            onClick={async (e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              try {
-                                const response = await fetch('/api/tickets/delete', {
-                                  method: 'DELETE',
-                                  headers: {
-                                    'Content-Type': 'application/json',
-                                  },
-                                  body: JSON.stringify({ ticketId: ticket.ticket_id })
-                                });
-                                if (response.ok) {
-                                  toast.dismiss(t);
-                                  const updatedTickets = userTicketsRef.current.filter(t => t.ticket_id !== ticket.ticket_id);
-                                  setUserTickets(updatedTickets);
-                                  userTicketsRef.current = updatedTickets;
-                                }
-                              } catch (error) {
-                                console.error('Error deleting ticket:', error);
-                              }
-                            }}
-                                className="px-3 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-[16px] hover:bg-red-200 hover:text-red-900 transition-all duration-200 ease-in-out cursor-pointer"
-                          >
-                            Cancel
-                          </span>
-                        )}
-                        <span className={`px-3 py-1 text-sm font-medium rounded-[16px] ${getStatusColor(ticket.status)}`}>
-                          {ticket.status === 'Closed' ? 'Completed' : ticket.status}
-                        </span>
-                          </div>
-                      </div>
-                    </div>
-                  ));
-                  }, 100);
+                        </div>
+                      ));
+                    }, 100);
+                  }
                 }
               }
             }
+          } catch (error) {
+            console.error('Error parsing notification data:', error);
           }
-        } catch (error) {
-          console.error('Error parsing notification data:', error);
-        }
-      };
-      eventSource.onerror = (error) => {
-        console.error('EventSource error:', error);
-      };
-      setNotificationEventSource(eventSource);
-      notificationEventSourceRef.current = eventSource;
+        };
+        
+        eventSource.onerror = (error) => {
+          console.error('EventSource error:', error);
+          // Close the connection on error to prevent repeated failed attempts
+          eventSource.close();
+        };
+        
+        setNotificationEventSource(eventSource);
+        notificationEventSourceRef.current = eventSource;
+      } catch (error) {
+        console.error('Failed to create EventSource:', error);
+        // EventSource is optional, so we don't need to show an error to the user
+      }
     }
 
     // Cleanup
@@ -424,9 +440,7 @@ export default function Home() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-6xl mx-auto px-12 sm:px-6 md:px-8 mb-10">
                 <div 
                   className="card-item bg-gray-200 transition-all duration-500 ease-in-out hover:scale-105 hover:bg-white cursor-pointer rounded-xl" 
-                  onClick={() => {
-                    window.location.href = '/ticket-history'
-                  }}
+                  onClick={() => setIsHistoryModalOpen(true)}
                 >
                   <div className="flex flex-col h-full">
                     <div className="pd-right-medium text-left p-6 md:p-6">
@@ -441,13 +455,27 @@ export default function Home() {
                   </div>
                 </div>
 
-                <FileTicketCard />
+                <FileTicketCard onClick={() => setIsModalOpen(true)} />
               </div>
             </div>
 
           </header>
         </main>
       </div>
+      
+      {/* Ticket Form Modal */}
+      <TicketFormModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        userData={userData}
+      />
+      
+      {/* Ticket History Modal */}
+      <TicketHistoryModal 
+        isOpen={isHistoryModalOpen}
+        onClose={() => setIsHistoryModalOpen(false)}
+        userData={userData}
+      />
     </>
   )
 }

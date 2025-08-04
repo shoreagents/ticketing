@@ -34,6 +34,20 @@ export default function FormPage() {
     setIsFormValid(isValid)
   }, [formData])
 
+  // Add validation state for individual fields
+  const [fieldErrors, setFieldErrors] = useState({
+    concern: false,
+    category: false
+  })
+
+  // Update field errors when form data changes
+  useEffect(() => {
+    setFieldErrors({
+      concern: formData.concern.trim() === '',
+      category: formData.category.trim() === ''
+    })
+  }, [formData])
+
   useEffect(() => {
     // Check if user is authenticated
     const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
@@ -90,11 +104,11 @@ export default function FormPage() {
     
     const formData = new FormData(e.target as HTMLFormElement)
     const concern = formData.get('concern') as string
-    const category = formData.category // Use state value instead of form data
+    const category = formData.get('category') as string // Fixed: get category from FormData
     const description = formData.get('description') as string
 
     if (!concern || !category) {
-      alert('Please fill in all required fields')
+      toast.error('Please fill in all required fields (Concern and Category)')
       return
     }
 
@@ -306,7 +320,9 @@ export default function FormPage() {
                     <div className="form-container bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200 sm:p-6 lg:p-8 w-full max-w-2xl">
                         <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
                           <div className="space-y-2 sm:space-y-3">
-                            <Label htmlFor="concern" className="text-sm sm:text-base">Concern <span className="text-gray-600">(Required)</span></Label>
+                            <Label htmlFor="concern" className="text-sm sm:text-base">
+                              Concern <span className="text-gray-600">(Required)</span>
+                            </Label>
                             <Input
                               id="concern"
                               name="concern"
@@ -319,7 +335,9 @@ export default function FormPage() {
                           </div>
 
                           <div className="space-y-2 sm:space-y-3">
-                            <Label htmlFor="category" className="text-sm sm:text-base">What is your support ticket related to? <span className="text-gray-600">(Required)</span></Label>
+                            <Label htmlFor="category" className="text-sm sm:text-base">
+                              What is your support ticket related to? <span className="text-gray-600">(Required)</span>
+                            </Label>
                             <CustomSelect
                               name="category"
                               required
@@ -329,6 +347,7 @@ export default function FormPage() {
                                 value: category.name,
                                 label: category.name
                               }))}
+
                             />
                           </div>
 

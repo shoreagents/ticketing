@@ -67,9 +67,14 @@ export async function POST(request: NextRequest) {
     // Handle file uploads (currently disabled - Supabase not configured)
     const filePaths: string[] = []
     if (files && files.length > 0) {
-      console.log('File uploads are currently disabled - Supabase not configured')
+      console.log('Files received:', files.length)
+      console.log('File names:', files.map(f => f.name))
+      console.log('File sizes:', files.map(f => f.size))
+      console.log('File types:', files.map(f => f.type))
       // For now, we'll skip file uploads and just create the ticket
       // TODO: Configure Supabase for file uploads
+    } else {
+      console.log('No files received')
     }
 
     // Create ticket data

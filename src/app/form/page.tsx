@@ -109,15 +109,21 @@ export default function FormPage() {
 
       // Get files from the selected files state
       if (selectedFiles.length > 0) {
+        console.log('Sending files:', selectedFiles.length)
+        console.log('File names:', selectedFiles.map(f => f.name))
         selectedFiles.forEach(file => {
           uploadData.append('files', file)
         })
+      } else {
+        console.log('No files to send')
       }
 
       const response = await fetch('/api/tickets', {
         method: 'POST',
         headers: {
           'user-data': JSON.stringify(userData)
+          // Don't set Content-Type header when using FormData
+          // Browser will automatically set it to multipart/form-data
         },
         body: uploadData
       })

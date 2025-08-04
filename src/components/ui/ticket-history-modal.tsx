@@ -167,7 +167,7 @@ export default function TicketHistoryModal({ isOpen, onClose, userData }: Ticket
             transition={{ duration: 0.2, ease: "easeOut" }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
               {/* Header */}
               <div className="flex items-center justify-between p-6 border-b border-gray-200">
                 <div>
@@ -185,7 +185,7 @@ export default function TicketHistoryModal({ isOpen, onClose, userData }: Ticket
               </div>
 
               {/* Content */}
-              <div className="p-6">
+              <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
                 {/* Search and Filter Section */}
                 <div className="flex flex-col sm:flex-row gap-4 mb-6">
                   <div className="flex-1">
@@ -217,7 +217,7 @@ export default function TicketHistoryModal({ isOpen, onClose, userData }: Ticket
                 </div>
 
                 {/* Tickets Table */}
-                <div className="rounded-md border">
+                <div className="rounded-md border overflow-hidden">
                   <Table>
                     <TableHeader>
                       <TableRow>

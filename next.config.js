@@ -5,7 +5,7 @@ const nextConfig = {
     unoptimized: true,
   },
   // Ensure proper asset handling
-  assetPrefix: process.env.NODE_ENV === 'development' ? '' : './',
+  assetPrefix: process.env.NODE_ENV === 'development' ? '' : '/',
   // Ensure proper base path
   basePath: '',
 };

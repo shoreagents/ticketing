@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { ArrowLeft, Search, User, ArrowUp, ArrowDown } from 'lucide-react'
+import { ArrowLeft, Search, ArrowUp, ArrowDown } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import { CustomSelect } from '@/components/ui/custom-select'
@@ -123,37 +123,7 @@ export default function TicketHistoryPage() {
     window.location.href = '/login';
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Closed':
-        return 'bg-green-100 text-green-800';
-      case 'In Progress':
-        return 'bg-blue-100 text-blue-800';
-      case 'For Approval':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'On Hold':
-        return 'bg-gray-100 text-gray-800';
-      case 'Approved':
-        return 'bg-indigo-100 text-indigo-800';
-      case 'Stuck':
-        return 'bg-red-100 text-red-800';
-      case 'Actioned':
-        return 'bg-purple-100 text-purple-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -166,7 +136,7 @@ export default function TicketHistoryPage() {
 
   const getFilteredAndSortedTickets = () => {
     // First filter the tickets
-    let filteredTickets = tickets.filter((ticket) => {
+    const filteredTickets = tickets.filter((ticket) => {
       // Search filter
       const searchLower = searchQuery.toLowerCase();
       const matchesSearch = 
@@ -183,8 +153,8 @@ export default function TicketHistoryPage() {
 
     // Then sort the filtered tickets
     return filteredTickets.sort((a, b) => {
-      let aValue: any = a[sortField as keyof Ticket];
-      let bValue: any = b[sortField as keyof Ticket];
+      let aValue: string | number | Date = a[sortField as keyof Ticket];
+      let bValue: string | number | Date = b[sortField as keyof Ticket];
 
       // Handle date fields
       if (sortField === 'created_at' || sortField === 'resolved_at') {

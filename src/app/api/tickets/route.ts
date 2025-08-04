@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
     // Check if this is a multipart form data request
     const contentType = request.headers.get('content-type') || ''
     
-    let concern: string, category: string, description: string, supportingInfo: string, files: File[] = []
+    let concern: string, category: string, description: string, files: File[] = []
     
     if (contentType.includes('multipart/form-data')) {
       // Handle file upload
@@ -14,7 +14,6 @@ export async function POST(request: NextRequest) {
       concern = formData.get('concern') as string
       category = formData.get('category') as string
       description = formData.get('description') as string
-      supportingInfo = formData.get('supportingInfo') as string
       files = formData.getAll('files') as File[]
     } else {
       // Handle JSON request (existing functionality)

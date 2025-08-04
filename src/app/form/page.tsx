@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { CustomSelect } from '@/components/ui/custom-select'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
-import { useSearchParams } from 'next/navigation'
+
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 
